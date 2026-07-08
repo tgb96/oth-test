@@ -1264,6 +1264,100 @@
         gap: 6px;
       }
     }
+
+
+    /* Flujo nuevo: configuración inicial separada del marcador. */
+    body:not(.match-active) .score-layout {
+      display: none !important;
+    }
+
+    body.match-active .setup-card {
+      display: none !important;
+    }
+
+    body:not(.match-active) .setup-card {
+      max-width: 720px;
+      margin: 20px auto 0;
+      padding: 22px;
+    }
+
+    body:not(.match-active) .setup-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    body:not(.match-active) .setup-grid > div:first-child,
+    body:not(.match-active) .setup-grid > div:last-child {
+      grid-column: 1 / -1;
+    }
+
+    body:not(.match-active) #newMatchBtn {
+      width: 100%;
+      min-height: 58px;
+      font-size: 17px;
+      border-radius: 18px;
+    }
+
+    body:not(.match-active) .header {
+      max-width: 720px;
+      margin: 18px auto 16px;
+    }
+
+    body:not(.match-active) .header p::after {
+      content: " Selecciona categoría y jugadores para iniciar.";
+    }
+
+    @media (max-width: 700px) {
+      body:not(.match-active) .setup-card {
+        margin-top: 10px;
+        padding: 16px;
+      }
+
+      body:not(.match-active) .setup-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* En horizontal se oculta la barra inferior real de la app para ganar espacio. */
+    @media (orientation: landscape) and (max-height: 560px) and (max-width: 980px) {
+      body {
+        padding-bottom: 0 !important;
+      }
+
+      #appBottomNav,
+      .app-bottom-nav,
+      .bottom-nav {
+        display: none !important;
+      }
+
+      body.match-active .score-layout {
+        display: grid !important;
+      }
+
+      body:not(.match-active) .setup-card {
+        max-width: 760px;
+        margin-top: 6px;
+        padding: 10px;
+      }
+
+      body:not(.match-active) .setup-grid {
+        grid-template-columns: 110px 1fr 1fr auto;
+        gap: 8px;
+      }
+
+      body:not(.match-active) .setup-grid > div:first-child,
+      body:not(.match-active) .setup-grid > div:last-child {
+        grid-column: auto;
+      }
+
+      body:not(.match-active) #newMatchBtn {
+        min-height: 38px;
+        font-size: 12px;
+        border-radius: 12px;
+        white-space: nowrap;
+      }
+    }
+
   </style>
 
   <link rel="manifest" href="manifest.webmanifest">
@@ -1402,6 +1496,7 @@
           <button class="orange-btn" id="switchServer" type="button">Cambiar sacador</button>
           <button class="blue-btn" id="correctionBtn" type="button">Corregir</button>
           <button class="danger-btn" id="resetBtn" type="button">Reiniciar</button>
+          <button class="green-btn" id="configureNewMatchBtn" type="button">Nuevo partido</button>
           <button class="ghost" id="clearSavedBtn" type="button">Borrar guardado</button>
         </div>
 
@@ -1582,6 +1677,7 @@
     const POINT_LABELS = ["0", "15", "30", "40"];
 
     let history = [];
+    let matchActive = false;
     let ignoreSetupEvents = false;
     let toastTimer = null;
     let wakeLock = null;
@@ -1611,6 +1707,12 @@
 
     function getState() {
       return history[history.length - 1];
+    }
+
+    function setMatchActive(active) {
+      matchActive = Boolean(active);
+      document.body.classList.toggle("match-active", matchActive);
+      document.body.classList.toggle("setup-active", !matchActive);
     }
 
     function showToast(message) {
@@ -2183,17 +2285,50 @@
     }
 
     function startNewMatch() {
-      if (isMatchDirty()) {
+      if (matchActive && isMatchDirty()) {
         const ok = confirm("¿Seguro que quieres crear un nuevo partido? Se borrará el marcador actual guardado en este celular.");
         if (!ok) return;
       }
 
+      ensureDistinctPlayerSelects();
       clearSavedMatch();
-      resetMatchWithSetup({ toast: "Nuevo partido creado" });
+      history = [createMatchFromSetup()];
+      saveMatch();
+      setMatchActive(true);
+      render();
+      requestWakeLock();
+      showToast("Partido iniciado");
+      vibrate(35);
+    }
+
+    function showSetupForNewMatch() {
+      if (matchActive && isMatchDirty()) {
+        const ok = confirm("¿Seguro que quieres configurar un nuevo partido? Se borrará el marcador actual guardado en este celular.");
+        if (!ok) return;
+      }
+
+      clearSavedMatch();
+      releaseWakeLock();
+      history = [createMatchFromSetup()];
+      setMatchActive(false);
+      render();
+      showToast("Selecciona categoría y jugadores para el nuevo partido");
+      vibrate(20);
     }
 
     function handleSetupChange(type) {
       if (ignoreSetupEvents) return;
+
+      if (!matchActive) {
+        if (type === "category") {
+          const selectedCategory = document.getElementById("categorySelect").value;
+          populatePlayers(selectedCategory);
+        }
+
+        ensureDistinctPlayerSelects(type === "playerA" ? "A" : type === "playerB" ? "B" : null);
+        history = [createMatchFromSetup()];
+        return;
+      }
 
       if (type === "category") {
         const selectedCategory = document.getElementById("categorySelect").value;
@@ -2763,6 +2898,7 @@
       });
 
       document.getElementById("newMatchBtn").addEventListener("click", startNewMatch);
+      document.getElementById("configureNewMatchBtn").addEventListener("click", showSetupForNewMatch);
 
       document.getElementById("clearSavedBtn").addEventListener("click", () => {
         const ok = confirm("¿Seguro que quieres borrar el marcador guardado en este celular?");
@@ -2804,10 +2940,11 @@
         history = savedHistory;
         const savedState = getState();
         populatePlayers(savedState.category, savedState.players[0], savedState.players[1]);
+        setMatchActive(true);
         showToast("Marcador anterior restaurado");
       } else {
         history = [createMatchFromSetup()];
-        saveMatch();
+        setMatchActive(false);
       }
 
       setupEvents();
