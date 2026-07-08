@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Open Tennis Huechuraba</title>
+
+  <script>
+    (function () {
+      function isIOSDevice() {
+        const ua = window.navigator.userAgent || "";
+        const platform = window.navigator.platform || "";
+
+        return (
+          /iPhone|iPad|iPod/i.test(ua) ||
+          (platform === "MacIntel" && window.navigator.maxTouchPoints > 1)
+        );
+      }
+
+      function isStandaloneMode() {
+        return (
+          window.matchMedia("(display-mode: standalone)").matches ||
+          window.navigator.standalone === true ||
+          document.referrer.startsWith("android-app://")
+        );
+      }
+
+      if (isIOSDevice()) {
+        document.documentElement.classList.add("is-ios-device");
+      }
+
+      if (isStandaloneMode()) {
+        document.documentElement.classList.add("is-standalone-app");
+      }
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/v3.css" />
+  <link rel="stylesheet" href="assets/css/v4.css?v=4.1" />
+  <link rel="stylesheet" href="assets/css/v5.css?v=5" />
+
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+
+  <meta name="theme-color" content="#0b2f25">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Open Tennis">
+
+  <style>
+    .v5-hero-text {
+      text-align: justify;
+      text-align-last: left;
+    }
+
+    .is-standalone-app #installPromptCard {
+      display: none !important;
+    }
+
+    .is-ios-device:not(.is-standalone-app) #installActionBtn {
+      display: none !important;
+    }
+
+    .is-ios-device:not(.is-standalone-app) .v5-install-card {
+      grid-template-columns: auto 1fr !important;
+    }
+
+    .is-ios-device:not(.is-standalone-app) .v5-install-copy p {
+      line-height: 1.25;
+    }
+
+    .is-standalone-app body.index-page {
+      height: 100dvh;
+      min-height: 100dvh;
+      max-height: 100dvh;
+      overflow: hidden !important;
+    }
+
+    .is-standalone-app .v5-home-main {
+      height: calc(100dvh - 112px);
+      min-height: auto !important;
+      max-height: calc(100dvh - 112px);
+      overflow: hidden !important;
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0 !important;
+    }
+
+    .is-standalone-app .v5-hero-card {
+      max-height: 100%;
+      margin: 0 !important;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .is-standalone-app .v5-install-card {
+      display: none !important;
+    }
+
+    .is-standalone-app .app-bottom-nav {
+      position: fixed !important;
+      bottom: max(8px, env(safe-area-inset-bottom)) !important;
+    }
+
+    @media (display-mode: standalone) {
+      #installPromptCard {
+        display: none !important;
+      }
+
+      body.index-page {
+        height: 100dvh;
+        min-height: 100dvh;
+        max-height: 100dvh;
+        overflow: hidden !important;
+      }
+
+      .v5-home-main {
+        height: calc(100dvh - 112px);
+        min-height: auto !important;
+        max-height: calc(100dvh - 112px);
+        overflow: hidden !important;
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .v5-hero-card {
+        max-height: 100%;
+        margin: 0 !important;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+    }
+  </style>
+
+  <script defer src="assets/js/app.js?v=5"></script>
+  <script defer src="assets/js/pwa-install.js?v=5"></script>
+</head>
+
+<body class="index-page v5-page">
+  <main class="v5-home-main" aria-label="Inicio Open Tennis Huechuraba">
+    <section class="v5-hero-card">
+      <div class="v5-hero-logo-wrap" aria-hidden="true">
+        <img class="v5-hero-logo" src="assets/img/logo-open-tennis.png" alt="">
+      </div>
+
+      <p class="v5-eyebrow">Escalerilla 2026</p>
+
+      <h1>Open Tennis<br>Huechuraba</h1>
+
+      <p class="v5-hero-text">
+        Sitio oficial para consultar programación, resultados, tablas, estadísticas, reglamento y marcador de la escalerilla 2026.
+      </p>
+
+      <div class="v5-hero-actions" aria-label="Accesos principales">
+        <a class="v5-btn v5-btn-clay" href="partidos.html">Ver programación y resultados</a>
+        <a class="v5-btn v5-btn-green" href="tablas.html">Ver tablas y estadísticas</a>
+      </div>
+    </section>
+
+    <section id="installPromptCard" class="v5-install-card" aria-label="Agregar al inicio">
+      <img src="assets/img/logo-open-tennis.png" alt="Open Tennis Huechuraba">
+
+      <div class="v5-install-copy">
+        <h2 id="installCardTitle">Agregar al inicio</h2>
+        <p id="installHelpText">Android: toca Instalar para agregar la app a tu pantalla de inicio.</p>
+      </div>
+
+      <button id="installActionBtn" class="v5-install-action" type="button">Instalar</button>
+    </section>
+  </main>
+
+  <nav id="appBottomNav" class="app-bottom-nav" aria-label="Navegación principal">
+    <a href="index.html" data-page="index.html">
+      <span class="nav-icon" aria-hidden="true">🏠</span>
+      <span class="nav-label">Inicio</span>
+    </a>
+
+    <a href="partidos.html" data-page="partidos.html">
+      <span class="nav-icon" aria-hidden="true">🎾</span>
+      <span class="nav-label">Partidos</span>
+    </a>
+
+    <a href="tablas.html" data-page="tablas.html">
+      <span class="nav-icon" aria-hidden="true">📊</span>
+      <span class="nav-label">Tablas</span>
+    </a>
+
+    <a href="reglas.html" data-page="reglas.html">
+      <span class="nav-icon" aria-hidden="true">📘</span>
+      <span class="nav-label">Reglas</span>
+    </a>
+
+    <a href="marcador.html" data-page="marcador.html">
+      <span class="nav-icon" aria-hidden="true">🔢</span>
+      <span class="nav-label">Marcador</span>
+    </a>
+  </nav>
+
+  <script>
+    (function () {
+      function isIOSDevice() {
+        const ua = window.navigator.userAgent || "";
+        const platform = window.navigator.platform || "";
+
+        return (
+          /iPhone|iPad|iPod/i.test(ua) ||
+          (platform === "MacIntel" && window.navigator.maxTouchPoints > 1)
+        );
+      }
+
+      function isStandaloneMode() {
+        return (
+          window.matchMedia("(display-mode: standalone)").matches ||
+          window.navigator.standalone === true ||
+          document.referrer.startsWith("android-app://")
+        );
+      }
+
+      function configureInstallCard() {
+        const installCard = document.getElementById("installPromptCard");
+        const installTitle = document.getElementById("installCardTitle");
+        const installText = document.getElementById("installHelpText");
+        const installButton = document.getElementById("installActionBtn");
+
+        if (isIOSDevice()) {
+          document.documentElement.classList.add("is-ios-device");
+        }
+
+        if (isStandaloneMode()) {
+          document.documentElement.classList.add("is-standalone-app");
+
+          if (installCard) {
+            installCard.hidden = true;
+            installCard.style.display = "none";
+            installCard.setAttribute("aria-hidden", "true");
+          }
+
+          document.body.style.overflow = "hidden";
+          document.body.style.height = "100dvh";
+          document.body.style.minHeight = "100dvh";
+          document.body.style.maxHeight = "100dvh";
+
+          return;
+        }
+
+        if (isIOSDevice()) {
+          if (installTitle) {
+            installTitle.textContent = "Agregar en iPhone";
+          }
+
+          if (installText) {
+            installText.textContent = "Toca Compartir y elige Agregar a pantalla de inicio.";
+          }
+
+          if (installButton) {
+            installButton.hidden = true;
+            installButton.style.display = "none";
+            installButton.setAttribute("aria-hidden", "true");
+          }
+
+          return;
+        }
+
+        if (installTitle) {
+          installTitle.textContent = "Agregar al inicio";
+        }
+
+        if (installText) {
+          installText.textContent = "Android: toca Instalar para agregar la app a tu pantalla de inicio.";
+        }
+
+        if (installButton) {
+          installButton.hidden = false;
+          installButton.style.display = "";
+          installButton.removeAttribute("aria-hidden");
+          installButton.textContent = "Instalar";
+        }
+      }
+
+      configureInstallCard();
+
+      document.addEventListener("DOMContentLoaded", configureInstallCard);
+      window.addEventListener("load", configureInstallCard);
+      window.addEventListener("resize", configureInstallCard);
+
+      setTimeout(configureInstallCard, 300);
+      setTimeout(configureInstallCard, 1000);
+      setTimeout(configureInstallCard, 2000);
+    })();
+  </script>
+</body>
+</html>
