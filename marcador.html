@@ -230,6 +230,16 @@
       min-height: 0;
     }
 
+    /*
+      El encabezado queda limpio: solo categoría y jugadores.
+      El sacador y el estado del partido se muestran únicamente
+      en la tarjeta "Estado del partido".
+    */
+    .match-banner .serve-strip,
+    .match-banner .wake-strip {
+      display: none !important;
+    }
+
     .big-score {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -320,6 +330,26 @@
       background: white;
       border: 1px solid var(--line);
       color: var(--text);
+    }
+
+    .undo-btn {
+      background: #fff7ed;
+      border: 1px solid #f59e0b;
+      color: #92400e;
+    }
+
+    .undo-btn:not(:disabled) {
+      background: #f59e0b;
+      border-color: #d97706;
+      color: white;
+      box-shadow: 0 8px 18px rgba(245, 158, 11, 0.24);
+    }
+
+    .undo-btn:disabled {
+      background: #fef3c7;
+      border-color: #fde68a;
+      color: #a16207;
+      opacity: 0.72;
     }
 
     .green-btn {
@@ -1358,6 +1388,71 @@
       }
     }
 
+    /* Refuerzo: ocultar barra inferior en horizontal aunque el navegador reporte otra altura. */
+    @media screen and (orientation: landscape) and (max-height: 700px),
+           screen and (orientation: landscape) and (pointer: coarse) {
+      html,
+      body,
+      body.match-active {
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+      }
+
+      #appBottomNav,
+      nav#appBottomNav,
+      .app-bottom-nav,
+      nav.app-bottom-nav,
+      .bottom-nav,
+      nav.bottom-nav {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        max-height: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+      }
+
+      .app {
+        padding-bottom: 6px !important;
+      }
+    }
+
+    /* Refuerzo por JavaScript: útil si orientation no se actualiza bien en la PWA. */
+    body.is-landscape-mobile,
+    body.is-landscape-mobile.match-active {
+      padding-bottom: 0 !important;
+      margin-bottom: 0 !important;
+    }
+
+    body.is-landscape-mobile #appBottomNav,
+    body.is-landscape-mobile nav#appBottomNav,
+    body.is-landscape-mobile .app-bottom-nav,
+    body.is-landscape-mobile nav.app-bottom-nav,
+    body.is-landscape-mobile .bottom-nav,
+    body.is-landscape-mobile nav.bottom-nav {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      height: 0 !important;
+      min-height: 0 !important;
+      max-height: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border: 0 !important;
+      overflow: hidden !important;
+      pointer-events: none !important;
+    }
+
+    body.is-landscape-mobile .app {
+      padding-bottom: 6px !important;
+    }
+
+
   </style>
 
   <link rel="manifest" href="manifest.webmanifest">
@@ -1447,32 +1542,6 @@
           </div>
         </div>
 
-        <div class="sets-table">
-          <div class="sets-row sets-head">
-            <div>Jugador</div>
-            <div>Set 1</div>
-            <div>Set 2</div>
-            <div>STB</div>
-            <div>Sets</div>
-          </div>
-
-          <div class="sets-row">
-            <div class="sets-player" id="tableNameA">Jugador A</div>
-            <div class="sets-number" id="tableS1A">0</div>
-            <div class="sets-number" id="tableS2A">0</div>
-            <div class="sets-number" id="tableSTBA">0</div>
-            <div class="sets-number" id="tableSetsA">0</div>
-          </div>
-
-          <div class="sets-row">
-            <div class="sets-player" id="tableNameB">Jugador B</div>
-            <div class="sets-number" id="tableS1B">0</div>
-            <div class="sets-number" id="tableS2B">0</div>
-            <div class="sets-number" id="tableSTBB">0</div>
-            <div class="sets-number" id="tableSetsB">0</div>
-          </div>
-        </div>
-
         <section class="status-card">
           <div class="status-title">Estado del partido</div>
           <div class="status-line" id="statusLine"></div>
@@ -1492,7 +1561,7 @@
         </section>
 
         <div class="controls-row">
-          <button class="ghost" id="undoBtn" type="button">Deshacer</button>
+          <button class="undo-btn" id="undoBtn" type="button">Deshacer</button>
           <button class="orange-btn" id="switchServer" type="button">Cambiar sacador</button>
           <button class="blue-btn" id="correctionBtn" type="button">Corregir</button>
           <button class="danger-btn" id="resetBtn" type="button">Reiniciar</button>
@@ -1513,7 +1582,7 @@
 
       <aside class="side">
         <section class="side-card">
-          <div class="side-title">Resumen por sets</div>
+          <div class="side-title">Resultado por sets</div>
 
           <div class="set-mini">
             <div class="set-box" id="setBox1">
@@ -2383,7 +2452,6 @@
 
       if (!("wakeLock" in navigator)) {
         updateWakeUI("unsupported");
-        showToast("Este navegador no permite mantener la pantalla activa automáticamente.");
         return;
       }
 
@@ -2458,10 +2526,10 @@
       });
 
       document.addEventListener("pointerdown", () => {
-        if (!wakeLockWanted && isMatchDirty()) {
+        if (matchActive && !wakeLock) {
           requestWakeLock();
         }
-      }, { once: true });
+      }, { passive: true });
     }
 
     function drawRoundedRect(ctx, x, y, w, h, r) {
@@ -2757,21 +2825,6 @@
       document.getElementById("pointA").textContent = `Punto ${labelA}`;
       document.getElementById("pointB").textContent = `Punto ${labelB}`;
 
-      document.getElementById("tableNameA").textContent = labelA;
-      document.getElementById("tableNameB").textContent = labelB;
-
-      document.getElementById("tableS1A").textContent = state.sets[0].games[0];
-      document.getElementById("tableS1B").textContent = state.sets[0].games[1];
-
-      document.getElementById("tableS2A").textContent = state.sets[1].games[0];
-      document.getElementById("tableS2B").textContent = state.sets[1].games[1];
-
-      document.getElementById("tableSTBA").textContent = state.sets[2].superTiebreakPoints[0];
-      document.getElementById("tableSTBB").textContent = state.sets[2].superTiebreakPoints[1];
-
-      document.getElementById("tableSetsA").textContent = setsWon[0];
-      document.getElementById("tableSetsB").textContent = setsWon[1];
-
       for (let i = 0; i < 3; i++) {
         const box = document.getElementById(`setBox${i + 1}`);
         const status = document.getElementById(`set${i + 1}Status`);
@@ -2821,7 +2874,7 @@
       const statusParts = [
         `<span class="badge green">Set actual: ${state.currentSet + 1}</span>`,
         `<span class="badge orange">Saca: ${getPlayerLabel(state, currentServer)}</span>`,
-        `<span class="badge ${wakeLock ? "green" : "blue"}">${wakeLock ? "Pantalla activa" : "Guardado automático"}</span>`
+        `<span class="badge blue">Guardado automático</span>`
       ];
 
       if (state.inTiebreak) {
@@ -2931,6 +2984,32 @@
       });
     }
 
+
+    function setupLandscapeMenuMode() {
+      const update = () => {
+        const isTouchLike =
+          "ontouchstart" in window ||
+          navigator.maxTouchPoints > 0 ||
+          navigator.msMaxTouchPoints > 0;
+
+        const isLandscape = window.innerWidth > window.innerHeight;
+        const isCompactHeight = window.innerHeight <= 760;
+
+        document.body.classList.toggle(
+          "is-landscape-mobile",
+          isTouchLike && isLandscape && isCompactHeight
+        );
+      };
+
+      update();
+      window.addEventListener("resize", update, { passive: true });
+      window.addEventListener("orientationchange", () => setTimeout(update, 120), { passive: true });
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", update, { passive: true });
+      }
+    }
+
     function boot() {
       populatePlayers("A");
 
@@ -2949,6 +3028,7 @@
 
       setupEvents();
       setupWakeLock();
+      setupLandscapeMenuMode();
       render();
     }
 
