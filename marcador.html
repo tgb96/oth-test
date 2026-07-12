@@ -263,7 +263,7 @@
     }
 
     .player-name {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 900;
       text-align: center;
       margin-bottom: 10px;
@@ -460,24 +460,11 @@
 
     .set-box-title {
       display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      align-items: flex-start;
-      gap: 4px;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
       font-weight: 900;
       margin-bottom: 8px;
-      line-height: 1.08;
-    }
-
-    .set-box-title > span:first-child {
-      display: block;
-      font-size: 15px;
-    }
-
-    .set-box-title > .badge {
-      display: inline-flex;
-      width: fit-content;
-      max-width: 100%;
     }
 
     .set-score-line {
@@ -489,9 +476,9 @@
     }
 
     .set-score-name {
-      font-size: 14px;
+      font-size: 13px;
       color: #333;
-      font-weight: 800;
+      font-weight: 700;
     }
 
     .set-score-value {
@@ -503,7 +490,7 @@
       display: inline-block;
       border-radius: 999px;
       padding: 6px 10px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 900;
       background: #f3f4f6;
       color: #333;
@@ -1528,7 +1515,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: clamp(14px, 4vw, 17px);
+        font-size: clamp(12px, 3.5vw, 15px);
         line-height: 1.08;
       }
 
@@ -1562,7 +1549,7 @@
 
       body.match-active .badge {
         padding: 5px 8px;
-        font-size: 11.8px;
+        font-size: 11px;
       }
 
       body.match-active .change-alert {
@@ -1595,12 +1582,9 @@
       }
 
       body.match-active #setsResultCard .set-box-title {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 3px;
+        display: block;
         margin-bottom: 5px;
-        font-size: 12px;
+        font-size: 11px;
         line-height: 1.08;
       }
 
@@ -1745,11 +1729,11 @@
       }
 
       body.match-active .player-name {
-        height: 32px;
-        min-height: 32px;
-        max-height: 32px;
+        height: 30px;
+        min-height: 30px;
+        max-height: 30px;
         margin: 0 !important;
-        font-size: clamp(14px, 4.2vw, 18px) !important;
+        font-size: clamp(12px, 3.5vw, 15px) !important;
         line-height: 1.05 !important;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -1808,7 +1792,7 @@
 
       body.match-active .badge {
         padding: 5px 8px !important;
-        font-size: 11.6px !important;
+        font-size: 10.8px !important;
         line-height: 1.05 !important;
         max-width: 100%;
       }
@@ -1851,30 +1835,20 @@
       }
 
       body.match-active #setsResultCard .set-box-title {
-        height: 45px;
-        min-height: 45px;
-        max-height: 45px;
+        height: 43px;
+        min-height: 43px;
+        max-height: 43px;
         margin: 0 0 4px !important;
-        display: flex !important;
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: flex-start;
-        gap: 3px;
-        font-size: 12px !important;
+        display: block !important;
+        font-size: 10.6px !important;
         line-height: 1.05 !important;
         overflow: hidden;
       }
 
-      body.match-active #setsResultCard .set-box-title > span:first-child {
-        display: block;
-        font-size: 12.5px !important;
-        line-height: 1.05 !important;
-      }
-
       body.match-active #setsResultCard .set-box-title .badge {
-        margin-top: 0 !important;
-        padding: 3px 6px !important;
-        font-size: 9.4px !important;
+        margin-top: 3px !important;
+        padding: 3px 5px !important;
+        font-size: 8.8px !important;
         max-width: 100%;
         white-space: normal;
       }
@@ -1888,7 +1862,7 @@
       }
 
       body.match-active #setsResultCard .set-score-name {
-        font-size: 10px !important;
+        font-size: 9.2px !important;
         line-height: 1.05 !important;
         white-space: nowrap;
         overflow: hidden;
@@ -3286,62 +3260,27 @@
       showToast("Corrección aplicada");
     }
 
-    function normalizeNameForCompare(value) {
-      return String(value || "")
-        .trim()
-        .replace(/\s+/g, " ")
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .toLowerCase();
-    }
-
-    function getPrimaryFirstName(label) {
+    function getCompactPlayerName(label) {
       const clean = String(label || "").trim().replace(/\s+/g, " ");
       if (!clean) return "Jugador";
 
       const parts = clean.split(" ").filter(Boolean);
       if (parts.length <= 1) return clean;
 
-      const normalized = normalizeNameForCompare(clean);
+      const normalized = clean
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
 
-      // María José se considera como un solo nombre para mostrarlo completo.
-      if (normalized.startsWith("maria jose ") || normalized === "maria jose") {
-        return parts.slice(0, 2).join(" ");
+      if (normalized.startsWith("maria jose ")) {
+        const last = parts[parts.length - 1];
+        return `María José ${last ? last[0] + "." : ""}`.trim();
       }
 
-      return parts[0];
-    }
-
-    function getNameWithLastInitial(label) {
-      const clean = String(label || "").trim().replace(/\s+/g, " ");
-      const primary = getPrimaryFirstName(clean);
-      const parts = clean.split(" ").filter(Boolean);
-      const last = parts.length > 1 ? parts[parts.length - 1] : "";
-      const lastInitial = last ? `${last[0]}.` : "";
-      return `${primary} ${lastInitial}`.trim();
-    }
-
-    function getCompactPlayerName(label, contextState = null) {
-      const clean = String(label || "").trim().replace(/\s+/g, " ");
-      if (!clean) return "Jugador";
-
-      const stateForNames = contextState || (history.length ? getState() : null);
-      const category = stateForNames && stateForNames.category;
-      const roster = CLUB_PLAYERS[category] || [];
-      const primary = getPrimaryFirstName(clean);
-      const normalizedPrimary = normalizeNameForCompare(primary);
-
-      const playersWithSameFirstName = roster.filter(player =>
-        normalizeNameForCompare(getPrimaryFirstName(player)) === normalizedPrimary
-      );
-
-      // Por defecto se muestra solo el nombre. Si en una categoría hay dos jugadores
-      // con el mismo nombre, se agrega la inicial del apellido para diferenciarlos.
-      if (playersWithSameFirstName.length > 1) {
-        return getNameWithLastInitial(clean);
-      }
-
-      return primary;
+      const first = parts[0];
+      const last = parts[parts.length - 1];
+      const lastInitial = last && last !== first ? `${last[0]}.` : "";
+      return `${first} ${lastInitial}`.trim();
     }
 
     function getCompactStatusText(text, state) {
@@ -3351,7 +3290,7 @@
       state.players.forEach(player => {
         const full = String(player || "").trim();
         if (!full) return;
-        result = result.split(full).join(getCompactPlayerName(full, state));
+        result = result.split(full).join(getCompactPlayerName(full));
       });
 
       return result;
@@ -3366,8 +3305,8 @@
 
       const labelA = getPlayerLabel(state, 0);
       const labelB = getPlayerLabel(state, 1);
-      const compactLabelA = getCompactPlayerName(labelA, state);
-      const compactLabelB = getCompactPlayerName(labelB, state);
+      const compactLabelA = getCompactPlayerName(labelA);
+      const compactLabelB = getCompactPlayerName(labelB);
       const currentServer = getCurrentServer(state);
       const regularPoints = formatRegularPoints(state.points);
       const sideMessage = getSideChangeMessage(state);
@@ -3424,7 +3363,7 @@
         box.classList.toggle("done", state.sets[i].winner !== null);
 
         if (state.sets[i].winner !== null) {
-          status.textContent = `Ganó ${getCompactPlayerName(getPlayerLabel(state, state.sets[i].winner), state)}`;
+          status.textContent = `Ganó ${getCompactPlayerName(getPlayerLabel(state, state.sets[i].winner))}`;
           status.className = "badge green";
         } else if (state.currentSet === i && state.matchWinner === null) {
           status.textContent = "En juego";
@@ -3464,7 +3403,7 @@
 
       const statusParts = [
         `<span class="badge green">Set actual: ${state.currentSet + 1}</span>`,
-        `<span class="badge orange">Saca: ${getCompactPlayerName(getPlayerLabel(state, currentServer), state)}</span>`
+        `<span class="badge orange">Saca: ${getCompactPlayerName(getPlayerLabel(state, currentServer))}</span>`
       ];
 
       if (state.inTiebreak) {

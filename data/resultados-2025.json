@@ -1,0 +1,509 @@
+{
+  "temporada": 2025,
+  "descripcion": "Resultados históricos 2025. La tabla se ordena por puntaje y, en caso de empate, por el enfrentamiento directo.",
+  "criteriosOrden": [
+    "Mayor puntaje",
+    "Resultado del enfrentamiento directo entre los jugadores empatados"
+  ],
+  "categorias": {
+    "A": [
+      {
+        "jugador1": "Javier González",
+        "jugador2": "Nicolás Collao",
+        "s1": [
+          3,
+          6
+        ],
+        "s2": [
+          1,
+          6
+        ],
+        "stb": null,
+        "pts": [
+          0,
+          3
+        ]
+      },
+      {
+        "jugador1": "Felipe Reyes",
+        "jugador2": "Angelo Basualto",
+        "s1": [
+          2,
+          6
+        ],
+        "s2": [
+          7,
+          5
+        ],
+        "stb": [
+          10,
+          4
+        ],
+        "pts": [
+          2,
+          1
+        ]
+      },
+      {
+        "jugador1": "Diego Fossa",
+        "jugador2": "Tomás Gómez",
+        "s1": [
+          6,
+          0
+        ],
+        "s2": [
+          6,
+          2
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Rodrigo Vega",
+        "jugador2": "Christian Linares",
+        "s1": [
+          6,
+          2
+        ],
+        "s2": [
+          6,
+          2
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Nicolás Collao",
+        "jugador2": "Diego Fossa",
+        "s1": [
+          6,
+          3
+        ],
+        "s2": [
+          6,
+          4
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Rodrigo Vega",
+        "jugador2": "Felipe Reyes",
+        "s1": [
+          3,
+          6
+        ],
+        "s2": [
+          3,
+          6
+        ],
+        "stb": null,
+        "pts": [
+          0,
+          3
+        ]
+      },
+      {
+        "jugador1": "Tomás Gómez",
+        "jugador2": "Angelo Basualto",
+        "s1": [
+          4,
+          6
+        ],
+        "s2": [
+          1,
+          6
+        ],
+        "stb": null,
+        "pts": [
+          0,
+          3
+        ]
+      },
+      {
+        "jugador1": "Christian Linares",
+        "jugador2": "Angelo Basualto",
+        "s1": [
+          2,
+          6
+        ],
+        "s2": [
+          3,
+          6
+        ],
+        "stb": null,
+        "pts": [
+          0,
+          3
+        ]
+      },
+      {
+        "jugador1": "Angelo Basualto",
+        "jugador2": "Diego Fossa",
+        "s1": [
+          3,
+          6
+        ],
+        "s2": [
+          6,
+          7
+        ],
+        "stb": null,
+        "pts": [
+          0,
+          3
+        ]
+      },
+      {
+        "jugador1": "Tomás Gómez",
+        "jugador2": "Javier González",
+        "s1": [
+          6,
+          4
+        ],
+        "s2": [
+          6,
+          4
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Nicolás Collao",
+        "jugador2": "Christian Linares",
+        "s1": [
+          6,
+          0
+        ],
+        "s2": [
+          6,
+          4
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Tomás Gómez",
+        "jugador2": "Christian Linares",
+        "s1": [
+          6,
+          2
+        ],
+        "s2": [
+          6,
+          0
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Felipe Reyes",
+        "jugador2": "Nicolás Collao",
+        "s1": [
+          3,
+          6
+        ],
+        "s2": [
+          7,
+          5
+        ],
+        "stb": [
+          10,
+          1
+        ],
+        "pts": [
+          2,
+          1
+        ]
+      },
+      {
+        "jugador1": "Tomás Gómez",
+        "jugador2": "Rodrigo Vega",
+        "s1": [
+          6,
+          0
+        ],
+        "s2": [
+          6,
+          4
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Diego Fossa",
+        "jugador2": "Rodrigo Vega",
+        "s1": [
+          6,
+          2
+        ],
+        "s2": [
+          6,
+          4
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Javier González",
+        "jugador2": "Christian Linares",
+        "s1": [
+          6,
+          3
+        ],
+        "s2": [
+          6,
+          2
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Tomás Gómez",
+        "jugador2": "Nicolás Collao",
+        "s1": [
+          4,
+          6
+        ],
+        "s2": [
+          3,
+          6
+        ],
+        "stb": null,
+        "pts": [
+          0,
+          3
+        ]
+      },
+      {
+        "jugador1": "Diego Fossa",
+        "jugador2": "Christian Linares",
+        "s1": [
+          6,
+          0
+        ],
+        "s2": [
+          6,
+          1
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Rodrigo Vega",
+        "jugador2": "Javier González",
+        "s1": [
+          6,
+          4
+        ],
+        "s2": [
+          6,
+          2
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Angelo Basualto",
+        "jugador2": "Javier González",
+        "s1": [
+          6,
+          2
+        ],
+        "s2": [
+          6,
+          2
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Felipe Reyes",
+        "jugador2": "Christian Linares",
+        "s1": [
+          6,
+          0
+        ],
+        "s2": [
+          4,
+          6
+        ],
+        "stb": [
+          10,
+          4
+        ],
+        "pts": [
+          2,
+          1
+        ]
+      },
+      {
+        "jugador1": "Felipe Reyes",
+        "jugador2": "Tomás Gómez",
+        "s1": [
+          6,
+          3
+        ],
+        "s2": [
+          3,
+          6
+        ],
+        "stb": [
+          10,
+          8
+        ],
+        "pts": [
+          2,
+          1
+        ]
+      },
+      {
+        "jugador1": "Felipe Reyes",
+        "jugador2": "Diego Fossa",
+        "s1": [
+          6,
+          3
+        ],
+        "s2": [
+          1,
+          6
+        ],
+        "stb": [
+          9,
+          11
+        ],
+        "pts": [
+          1,
+          2
+        ]
+      },
+      {
+        "jugador1": "Rodrigo Vega",
+        "jugador2": "Nicolás Collao",
+        "s1": [
+          3,
+          6
+        ],
+        "s2": [
+          6,
+          2
+        ],
+        "stb": [
+          10,
+          8
+        ],
+        "pts": [
+          2,
+          1
+        ]
+      },
+      {
+        "jugador1": "Nicolás Collao",
+        "jugador2": "Angelo Basualto",
+        "s1": [
+          6,
+          3
+        ],
+        "s2": [
+          6,
+          1
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Angelo Basualto",
+        "jugador2": "Rodrigo Vega",
+        "s1": [
+          6,
+          3
+        ],
+        "s2": [
+          6,
+          3
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Diego Fossa",
+        "jugador2": "Javier González",
+        "s1": [
+          6,
+          0
+        ],
+        "s2": [
+          6,
+          0
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      },
+      {
+        "jugador1": "Felipe Reyes",
+        "jugador2": "Javier González",
+        "s1": [
+          7,
+          6
+        ],
+        "s2": [
+          6,
+          0
+        ],
+        "stb": null,
+        "pts": [
+          3,
+          0
+        ]
+      }
+    ],
+    "B": [],
+    "C": [],
+    "D": []
+  }
+}

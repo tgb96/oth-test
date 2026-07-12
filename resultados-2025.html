@@ -19,32 +19,42 @@
   <meta name="apple-mobile-web-app-title" content="Open Tennis">
   <link rel="stylesheet" href="assets/css/v3.css" />
   <link rel="stylesheet" href="assets/css/v4.css?v=4.1" />
-  <link rel="stylesheet" href="assets/css/v5.css?v=19" />
-  <script defer src="assets/js/app.js?v=19"></script>
+  <link rel="stylesheet" href="assets/css/v5.css?v=5" />
+  <script defer src="assets/js/app.js?v=5"></script>
 </head>
-<body class="resultados-2025-page v5-page">
+<body class="tablas-page v5-page">
   <div class="layout app-shell">
     <aside class="sidebar app-topbar">
       <a class="brand" href="index.html" aria-label="Open Tennis Huechuraba inicio"><img class="brand-logo" src="assets/img/logo-open-tennis.png" alt="" aria-hidden="true"><span class="brand-text"><span class="brand-main">Open Tennis</span><span class="brand-sub">Huechuraba · 2025</span></span></a>
     </aside>
     <main class="main app-main">
       <h1 class="page-title">Resultados 2025</h1>
-      <div class="rankings-app">
-        <section class="rankings-header single-subtitle">
-          <p>Tablas finales del año 2025 calculadas desde el registro histórico de resultados. Toca una categoría y luego un jugador para ver su historial completo y estadísticas.</p>
-        </section>
-        <div id="rankingsContenedor2025"></div>
-        <section class="criterios-box">
-          <h3>Criterios de clasificación 2025</h3>
-          <ul>
-            <li><strong>Mayor puntaje</strong></li>
-            <li><strong>Menos partidos jugados</strong> en caso de igualdad de puntos</li>
-            <li>Diferencia de sets</li>
-            <li>Diferencia de games</li>
-          </ul>
-          <p>Por ahora está cargada la base histórica de Categoría A. Las demás categorías quedarán listas cuando se agreguen sus bases correspondientes.</p>
-        </section>
-      </div>
+<div class="rankings-app">
+
+  <section class="rankings-header single-subtitle">
+    <p>Toca una categoría y luego un jugador para ver sus resultados y estadísticas de 2025.</p>
+  </section>
+
+  <div id="rankingsContenedor"></div>
+
+  <section class="criterios-box">
+    <h3>Criterios de clasificación</h3>
+    <ul>
+      <li><strong>Mayor puntaje</strong></li>
+      <li><strong>Resultado del enfrentamiento directo</strong> entre los jugadores empatados</li>
+    </ul>
+    <p class="criterios-nota">Los sets y games se muestran como estadísticas, pero no se utilizan para ordenar la tabla 2025.</p>
+
+    <h3>Sistema de puntuación 2025</h3>
+    <ul>
+      <li><strong>3 puntos:</strong> victoria por 2 sets a 0.</li>
+      <li><strong>2 puntos:</strong> victoria por 2 sets a 1.</li>
+      <li><strong>1 punto:</strong> derrota por 1 set a 2.</li>
+      <li><strong>0 puntos:</strong> derrota por 0 sets a 2.</li>
+    </ul>
+  </section>
+
+</div>
 
 <style>
 .rankings-app,
@@ -528,6 +538,14 @@
   padding-left: 20px;
 }
 
+
+.criterios-nota {
+  margin: 8px 0 18px;
+  color: var(--muted, #5f6f68);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
 @media (max-width: 700px) {
   .rankings-header h2 {
     font-size: 21px;
@@ -560,48 +578,16 @@
     grid-template-columns: 1fr 1fr;
   }
 }
-
-
-/* Ajustes específicos Resultados 2025 */
-.resultados-2025-page .rankings-header p {
-  line-height: 1.45;
-}
-.resultados-2025-page .categoria-pendiente {
-  padding: 16px;
-  color: #666;
-  background: #fafafa;
-  border-top: 1px solid #eee;
-  font-size: 14px;
-}
-.resultados-2025-page .categoria-pendiente strong {
-  color: #333;
-}
-.resultados-2025-page .detalle-extra .historial-lista,
-.resultados-2025-page .mobile-detalle-extra .historial-lista {
-  max-height: none;
-}
-.resultados-2025-page .etiqueta-zona.zona-campeon {
-  background: #fff2cc;
-  color: #8a5a00;
-  border-color: #f1c232;
-}
 </style>
 
 <script>
 (() => {
   "use strict";
 
-  const FUENTES_2025 = [
-    {
-      nombre: "Categoría A",
-      url: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRMCFaYCPYeJr-kMiwYfXNnsCWwXH33YFKRSNSh3hiLK9N09UshY_CA2Yumqc-LGFHpVTG_ZIA_KvGo/pub?gid=24824558&single=true&output=csv"
-    },
-    { nombre: "Categoría B", url: "" },
-    { nombre: "Categoría C", url: "" },
-    { nombre: "Categoría D", url: "" }
-  ];
+  const DATOS_URL = "data/resultados-2025.json";
+  const ORDEN_CATEGORIAS = ["A", "B", "C", "D"];
+  const contenedor = document.getElementById("rankingsContenedor");
 
-  const contenedor = document.getElementById("rankingsContenedor2025");
   const normalizarCache = new Map();
   const nombreCortoCache = new Map();
   const slugCache = new Map();
@@ -612,7 +598,7 @@
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
-      .replace(/\"/g, "&quot;")
+      .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
   }
 
@@ -638,108 +624,10 @@
     const key = String(texto || "");
     const cached = slugCache.get(key);
     if (cached !== undefined) return cached;
+
     const value = normalizar(key).replace(/\s+/g, "-");
     slugCache.set(key, value);
     return value;
-  }
-
-  function parseCSVLine(line) {
-    const result = [];
-    let current = "";
-    let insideQuotes = false;
-
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      if (char === '"' && line[i + 1] === '"') {
-        current += '"';
-        i++;
-      } else if (char === '"') {
-        insideQuotes = !insideQuotes;
-      } else if (char === "," && !insideQuotes) {
-        result.push(current);
-        current = "";
-      } else {
-        current += char;
-      }
-    }
-
-    result.push(current);
-    return result;
-  }
-
-  function parseCSV(csv) {
-    const texto = String(csv || "").replace(/^\uFEFF/, "").trim();
-    return texto ? texto.split(/\r?\n/).map(parseCSVLine) : [];
-  }
-
-  function numero(v) {
-    const n = Number(String(v ?? "").replace(",", ".").trim());
-    return Number.isNaN(n) ? 0 : n;
-  }
-
-  function valorLimpio(v) {
-    const t = String(v ?? "").trim();
-    return t === "-" || t === "" ? "" : t;
-  }
-
-  function claseCategoria(nombre) {
-    const n = normalizar(nombre);
-    if (n.includes("categoria a")) return "categoria-a";
-    if (n.includes("categoria b")) return "categoria-b";
-    if (n.includes("categoria c")) return "categoria-c";
-    if (n.includes("categoria d")) return "categoria-d";
-    return "categoria-a";
-  }
-
-  function letraCategoria(nombre) {
-    const n = normalizar(nombre);
-    if (n.includes("categoria a")) return "A";
-    if (n.includes("categoria b")) return "B";
-    if (n.includes("categoria c")) return "C";
-    if (n.includes("categoria d")) return "D";
-    return "";
-  }
-
-  function medalla(pos) {
-    const p = Number(pos);
-    if (p === 1) return "🏆";
-    if (p === 2) return "🥈";
-    if (p === 3) return "🥉";
-    return "";
-  }
-
-  function zonaJugador(categoria, posicion, total) {
-    const cat = letraCategoria(categoria);
-    const p = Number(posicion);
-    if (!p || !total) return null;
-
-    if (cat === "A") {
-      if (p === 1) return { texto: "Campeón 2025", clase: "zona-campeon", icono: "👑" };
-      if (p === total - 2) return { texto: "Repechaje descenso", clase: "zona-repechaje", icono: "🔁" };
-      if (p === total - 1 || p === total) return { texto: "Descenso directo", clase: "zona-descenso", icono: "⬇️" };
-      return null;
-    }
-
-    if (cat === "B") {
-      if (p === 1 || p === 2) return { texto: "Ascenso directo", clase: "zona-ascenso", icono: "⬆️" };
-      if (p === 3) return { texto: "Repechaje a A", clase: "zona-repechaje", icono: "🔁" };
-      if (p === total - 2) return { texto: "Repechaje descenso", clase: "zona-repechaje", icono: "🔁" };
-      if (p === total - 1 || p === total) return { texto: "Descenso directo", clase: "zona-descenso", icono: "⬇️" };
-      return null;
-    }
-
-    if (cat === "C") {
-      if (p === 1 || p === 2) return { texto: "Ascenso directo", clase: "zona-ascenso", icono: "⬆️" };
-      if (p === 3) return { texto: "Repechaje a B", clase: "zona-repechaje", icono: "🔁" };
-      return null;
-    }
-
-    if (cat === "D") {
-      if (p === 1) return { texto: "Campeón 2025", clase: "zona-campeon", icono: "👑" };
-      return null;
-    }
-
-    return null;
   }
 
   function nombreCorto(nombre) {
@@ -749,7 +637,7 @@
 
     const limpio = key.replace(/\s+/g, " ").trim();
     const partes = limpio.split(" ").filter(Boolean);
-    let value = limpio;
+    let value = "";
 
     if (partes.length === 1) {
       value = partes[0];
@@ -764,249 +652,95 @@
     return value;
   }
 
-  function buscarIndice(headers, candidatos, fallback = -1) {
-    const normalizados = headers.map(h => normalizar(h));
-
-    for (const candidato of candidatos) {
-      const c = normalizar(candidato);
-      const exacto = normalizados.findIndex(h => h === c);
-      if (exacto >= 0) return exacto;
-    }
-
-    for (const candidato of candidatos) {
-      const c = normalizar(candidato);
-      const parcial = normalizados.findIndex(h => h.includes(c));
-      if (parcial >= 0) return parcial;
-    }
-
-    return fallback;
+  function numero(valor) {
+    if (valor === null || valor === undefined || valor === "" || valor === "-") return null;
+    const n = Number(String(valor).replace(",", "."));
+    return Number.isFinite(n) ? n : null;
   }
 
-  function crearIndices(headers) {
-    return {
-      categoria: buscarIndice(headers, ["categoría", "categoria", "cat"], -1),
-      fecha: buscarIndice(headers, ["fecha", "día", "dia"], 0),
-      jugador1: buscarIndice(headers, ["jugador 1", "jugador1", "jugador a", "local"], 1),
-      jugador2: buscarIndice(headers, ["jugador 2", "jugador2", "jugador b", "visita"], 2),
-      pendiente: buscarIndice(headers, ["pendiente", "estado"], 3),
-      observaciones: buscarIndice(headers, ["observaciones", "observación", "obs"], 4),
-      s1j1: buscarIndice(headers, ["s1j1", "s1 j1", "set 1 j1", "set1 j1", "set 1 jugador 1"], 5),
-      s1j2: buscarIndice(headers, ["s1j2", "s1 j2", "set 1 j2", "set1 j2", "set 1 jugador 2"], 6),
-      s2j1: buscarIndice(headers, ["s2j1", "s2 j1", "set 2 j1", "set2 j1", "set 2 jugador 1"], 7),
-      s2j2: buscarIndice(headers, ["s2j2", "s2 j2", "set 2 j2", "set2 j2", "set 2 jugador 2"], 8),
-      stbj1: buscarIndice(headers, ["stbj1", "stb j1", "super tie j1", "super tiebreak j1", "set 3 j1"], 9),
-      stbj2: buscarIndice(headers, ["stbj2", "stb j2", "super tie j2", "super tiebreak j2", "set 3 j2"], 10),
-      setsJ1: buscarIndice(headers, ["setsj1", "sets j1", "sets jugador 1", "sets ganados j1"], 11),
-      setsJ2: buscarIndice(headers, ["setsj2", "sets j2", "sets jugador 2", "sets ganados j2"], 12),
-      ganador: buscarIndice(headers, ["ganador", "ganadora"], 13),
-      perdedor: buscarIndice(headers, ["perdedor", "perdedora"], 14),
-      tipo: buscarIndice(headers, ["tipo"], 15),
-      resultadoWeb: buscarIndice(headers, ["resultado web", "resultado", "marcador"], 16),
-      ptsJ1: buscarIndice(headers, ["ptsj1", "pts j1", "puntos j1", "puntos jugador 1"], 17),
-      ptsJ2: buscarIndice(headers, ["ptsj2", "pts j2", "puntos j2", "puntos jugador 2"], 18)
-    };
+  function claseCategoria(letra) {
+    return `categoria-${String(letra || "a").toLowerCase()}`;
   }
 
-  function pareceHeader(fila) {
-    const texto = normalizar(fila.join(" "));
-    return texto.includes("jugador") || texto.includes("ganador") || texto.includes("resultado") || texto.includes("fecha");
-  }
-
-  function get(cols, index) {
-    return index >= 0 ? String(cols[index] || "").trim() : "";
-  }
-
-  function parseResultado(resultado) {
-    const texto = String(resultado || "").trim();
-    if (!texto) return [];
-
-    const matches = texto.match(/\d+\s*[-/]\s*\d+/g) || [];
-    return matches.map(par => {
-      const [a, b] = par.split(/[-/]/).map(x => numero(x));
-      return [a, b];
-    });
-  }
-
-  function marcadorSet(a, b) {
-    const va = valorLimpio(a);
-    const vb = valorLimpio(b);
-    if (va === "" || vb === "") return "";
-    return `${va}-${vb}`;
-  }
-
-  function resultadoDesdeSets(partido) {
-    const partes = [];
-    const s1 = marcadorSet(partido.s1j1, partido.s1j2);
-    const s2 = marcadorSet(partido.s2j1, partido.s2j2);
-    const stb = marcadorSet(partido.stbj1, partido.stbj2);
-    if (s1) partes.push(s1);
-    if (s2) partes.push(s2);
-    if (stb) partes.push(stb);
-    return partes.join(" ");
-  }
-
-  function calcularSetsDesdeMarcador(partido) {
-    let setsJ1 = numero(partido.setsJ1);
-    let setsJ2 = numero(partido.setsJ2);
-
-    if (setsJ1 || setsJ2) return { setsJ1, setsJ2 };
-
-    const pares = [
-      [partido.s1j1, partido.s1j2],
-      [partido.s2j1, partido.s2j2],
-      [partido.stbj1, partido.stbj2]
-    ];
-
-    for (const [a, b] of pares) {
-      const va = valorLimpio(a);
-      const vb = valorLimpio(b);
-      if (va === "" || vb === "") continue;
-      const na = numero(va);
-      const nb = numero(vb);
-      if (na > nb) setsJ1++;
-      if (nb > na) setsJ2++;
-    }
-
-    return { setsJ1, setsJ2 };
-  }
-
-  function completarMarcadorDesdeResultado(partido) {
-    const pares = parseResultado(partido.resultadoWeb);
-    if (!pares.length) return partido;
-
-    if (!partido.s1j1 && pares[0]) {
-      partido.s1j1 = String(pares[0][0]);
-      partido.s1j2 = String(pares[0][1]);
-    }
-    if (!partido.s2j1 && pares[1]) {
-      partido.s2j1 = String(pares[1][0]);
-      partido.s2j2 = String(pares[1][1]);
-    }
-    if (!partido.stbj1 && pares[2]) {
-      partido.stbj1 = String(pares[2][0]);
-      partido.stbj2 = String(pares[2][1]);
-    }
-
-    return partido;
-  }
-
-  function inferirGanador(partido) {
-    if (partido.ganador) return partido.ganador;
-    const { setsJ1, setsJ2 } = calcularSetsDesdeMarcador(partido);
-    if (setsJ1 > setsJ2) return partido.jugador1;
-    if (setsJ2 > setsJ1) return partido.jugador2;
+  function medalla(posicion) {
+    if (posicion === 1) return "🏆";
+    if (posicion === 2) return "🥈";
+    if (posicion === 3) return "🥉";
     return "";
   }
 
-  function calcularPuntos(partido) {
-    const hayPuntosManual = partido.ptsJ1Raw !== "" || partido.ptsJ2Raw !== "";
-    if (hayPuntosManual) {
-      return {
-        ptsJ1: numero(partido.ptsJ1Raw),
-        ptsJ2: numero(partido.ptsJ2Raw)
-      };
+  function zonaFinal(posicion) {
+    if (posicion === 1) {
+      return { texto: "Campeón 2025", clase: "zona-campeon", icono: "👑" };
     }
 
-    const { setsJ1, setsJ2 } = calcularSetsDesdeMarcador(partido);
-    const ganador = normalizar(inferirGanador(partido));
-    let ptsJ1 = 0;
-    let ptsJ2 = 0;
-
-    if (ganador === partido._j1) {
-      ptsJ1 = 3;
-      ptsJ2 = setsJ2 > 0 ? 1 : 0;
-    } else if (ganador === partido._j2) {
-      ptsJ2 = 3;
-      ptsJ1 = setsJ1 > 0 ? 1 : 0;
+    if (posicion === 2) {
+      return { texto: "Subcampeón", clase: "zona-repechaje", icono: "🥈" };
     }
 
-    return { ptsJ1, ptsJ2 };
+    if (posicion === 3) {
+      return { texto: "Tercer lugar", clase: "zona-ascenso", icono: "🥉" };
+    }
+
+    return null;
   }
 
-  function leerPartidos(csv, categoriaDefault) {
-    const filas = parseCSV(csv).filter(cols => cols.some(c => String(c || "").trim() !== ""));
-    if (!filas.length) return [];
-
-    const headers = pareceHeader(filas[0]) ? filas[0] : [];
-    const inicio = headers.length ? 1 : 0;
-    const idx = headers.length
-      ? crearIndices(headers)
-      : crearIndices(["Fecha", "Jugador 1", "Jugador 2", "Pendiente", "Observaciones", "S1J1", "S1J2", "S2J1", "S2J2", "STBJ1", "STBJ2", "SetsJ1", "SetsJ2", "Ganador", "Perdedor", "Tipo", "Resultado Web", "PtsJ1", "PtsJ2"]);
-
-    return filas.slice(inicio).map(cols => {
-      // Soporte para formato simple: Categoría,Jugador 1,Jugador 2,Ganador,Resultado Web,Fecha,Estado,Observaciones
-      const formatoSimple = headers.length && buscarIndice(headers, ["categoría", "categoria"], -1) === 0 && buscarIndice(headers, ["jugador 1", "jugador1"], -1) === 1 && buscarIndice(headers, ["ganador"], -1) === 3;
-      let partido;
-
-      if (formatoSimple) {
-        partido = {
-          categoria: get(cols, 0) || categoriaDefault,
-          fecha: get(cols, 5),
-          jugador1: get(cols, 1),
-          jugador2: get(cols, 2),
-          pendiente: get(cols, 6),
-          observaciones: get(cols, 7),
-          s1j1: "", s1j2: "", s2j1: "", s2j2: "", stbj1: "", stbj2: "",
-          setsJ1: "", setsJ2: "",
-          ganador: get(cols, 3),
-          perdedor: "",
-          resultadoWeb: get(cols, 4),
-          ptsJ1Raw: "", ptsJ2Raw: ""
-        };
-      } else {
-        partido = {
-          categoria: get(cols, idx.categoria) || categoriaDefault,
-          fecha: get(cols, idx.fecha),
-          jugador1: get(cols, idx.jugador1),
-          jugador2: get(cols, idx.jugador2),
-          pendiente: get(cols, idx.pendiente),
-          observaciones: get(cols, idx.observaciones),
-          s1j1: valorLimpio(get(cols, idx.s1j1)),
-          s1j2: valorLimpio(get(cols, idx.s1j2)),
-          s2j1: valorLimpio(get(cols, idx.s2j1)),
-          s2j2: valorLimpio(get(cols, idx.s2j2)),
-          stbj1: valorLimpio(get(cols, idx.stbj1)),
-          stbj2: valorLimpio(get(cols, idx.stbj2)),
-          setsJ1: get(cols, idx.setsJ1),
-          setsJ2: get(cols, idx.setsJ2),
-          ganador: get(cols, idx.ganador),
-          perdedor: get(cols, idx.perdedor),
-          resultadoWeb: get(cols, idx.resultadoWeb),
-          ptsJ1Raw: get(cols, idx.ptsJ1),
-          ptsJ2Raw: get(cols, idx.ptsJ2)
-        };
-      }
-
-      completarMarcadorDesdeResultado(partido);
-      const sets = calcularSetsDesdeMarcador(partido);
-      const puntos = calcularPuntos(partido);
-      const resultadoCalculado = resultadoDesdeSets(partido);
-
-      partido.setsJ1 = sets.setsJ1;
-      partido.setsJ2 = sets.setsJ2;
-      partido.ptsJ1 = puntos.ptsJ1;
-      partido.ptsJ2 = puntos.ptsJ2;
-      partido.resultadoWeb = partido.resultadoWeb || resultadoCalculado;
-      partido.ganador = inferirGanador(partido);
-      partido._j1 = normalizar(partido.jugador1);
-      partido._j2 = normalizar(partido.jugador2);
-      partido._ganador = normalizar(partido.ganador);
-      partido._pendiente = normalizar(partido.pendiente);
-
-      return partido;
-    }).filter(p =>
-      p.jugador1 &&
-      p.jugador2 &&
-      p.jugador1 !== "-" &&
-      p.jugador2 !== "-" &&
-      p._pendiente !== "si" &&
-      normalizar(p.pendiente) !== "pendiente"
-    );
+  function zonaHTML(zona) {
+    if (!zona) return "";
+    return `<span class="etiqueta-zona ${zona.clase}">${zona.icono ? zona.icono + " " : ""}${escaparHTML(zona.texto)}</span>`;
   }
 
-  function crearStatsBase(nombre) {
+  function setValido(set) {
+    return Array.isArray(set) && numero(set[0]) !== null && numero(set[1]) !== null;
+  }
+
+  function marcadorSet(set, ladoJugador) {
+    if (!setValido(set)) return "";
+    const a = numero(set[ladoJugador]);
+    const b = numero(set[ladoJugador === 0 ? 1 : 0]);
+    return `${a}-${b}`;
+  }
+
+  function marcadorDesdeJugador(partido, ladoJugador) {
+    const partes = [
+      marcadorSet(partido.s1, ladoJugador),
+      marcadorSet(partido.s2, ladoJugador),
+      marcadorSet(partido.stb, ladoJugador)
+    ].filter(Boolean);
+
+    return partes.join(" ") || "Resultado registrado";
+  }
+
+  function setsDelPartido(partido) {
+    let setsJ1 = 0;
+    let setsJ2 = 0;
+
+    [partido.s1, partido.s2, partido.stb].forEach(set => {
+      if (!setValido(set)) return;
+      const j1 = numero(set[0]);
+      const j2 = numero(set[1]);
+
+      if (j1 > j2) setsJ1++;
+      if (j2 > j1) setsJ2++;
+    });
+
+    return [setsJ1, setsJ2];
+  }
+
+  function ganadorDelPartido(partido, sets) {
+    const ptsJ1 = numero(partido.pts?.[0]) ?? 0;
+    const ptsJ2 = numero(partido.pts?.[1]) ?? 0;
+
+    if (ptsJ1 !== ptsJ2) return ptsJ1 > ptsJ2 ? 0 : 1;
+    if (sets[0] !== sets[1]) return sets[0] > sets[1] ? 0 : 1;
+    return null;
+  }
+
+  function crearStatsBase(nombre, orden) {
     return {
       jugador: nombre,
+      _key: normalizar(nombre),
+      _orden: orden,
       puntos: 0,
       jugados: 0,
       ganados: 0,
@@ -1015,109 +749,122 @@
       setsPerdidos: 0,
       gamesGanados: 0,
       gamesPerdidos: 0,
+      resultadosRacha: [],
       historial: []
     };
   }
 
-  function games(partido, jugadorKey) {
-    const esJ1 = partido._j1 === jugadorKey;
-    const g1 = numero(esJ1 ? partido.s1j1 : partido.s1j2) + numero(esJ1 ? partido.s2j1 : partido.s2j2);
-    const g2 = numero(esJ1 ? partido.s1j2 : partido.s1j1) + numero(esJ1 ? partido.s2j2 : partido.s2j1);
-    return { gf: g1, gc: g2 };
-  }
-
-  function marcadorDesdeJugador(jugadorKey, partido) {
-    const esJ1 = partido._j1 === jugadorKey;
-    const set1 = esJ1 ? marcadorSet(partido.s1j1, partido.s1j2) : marcadorSet(partido.s1j2, partido.s1j1);
-    const set2 = esJ1 ? marcadorSet(partido.s2j1, partido.s2j2) : marcadorSet(partido.s2j2, partido.s2j1);
-    const stb = esJ1 ? marcadorSet(partido.stbj1, partido.stbj2) : marcadorSet(partido.stbj2, partido.stbj1);
-    const partes = [set1, set2].filter(Boolean);
-    if (stb) partes.push(stb);
-    return partes.join(" ") || partido.resultadoWeb || "Resultado registrado";
-  }
-
-  function rivalDe(jugadorKey, partido) {
-    return partido._j1 === jugadorKey ? partido.jugador2 : partido.jugador1;
-  }
-
-  function textoHistorial(jugadorKey, partido) {
-    const gano = partido._ganador === jugadorKey;
-    const estado = gano ? "Ganó" : "Perdió";
-    const marcador = marcadorDesdeJugador(jugadorKey, partido);
-    const fecha = partido.fecha ? `${partido.fecha} · ` : "";
-    return `${fecha}${estado} vs ${nombreCorto(rivalDe(jugadorKey, partido))} ${marcador}`;
-  }
-
-  function construirRanking(categoria, partidos) {
-    const mapa = new Map();
-
-    const asegurar = nombre => {
-      const key = normalizar(nombre);
-      if (!mapa.has(key)) mapa.set(key, crearStatsBase(nombre));
-      return mapa.get(key);
-    };
-
-    for (const p of partidos) {
-      const j1 = asegurar(p.jugador1);
-      const j2 = asegurar(p.jugador2);
-      const g1 = games(p, p._j1);
-      const g2 = games(p, p._j2);
-
-      j1.jugados++;
-      j2.jugados++;
-      j1.puntos += p.ptsJ1;
-      j2.puntos += p.ptsJ2;
-      j1.setsGanados += p.setsJ1;
-      j1.setsPerdidos += p.setsJ2;
-      j2.setsGanados += p.setsJ2;
-      j2.setsPerdidos += p.setsJ1;
-      j1.gamesGanados += g1.gf;
-      j1.gamesPerdidos += g1.gc;
-      j2.gamesGanados += g2.gf;
-      j2.gamesPerdidos += g2.gc;
-
-      if (p._ganador === p._j1) {
-        j1.ganados++;
-        j2.perdidos++;
-      } else if (p._ganador === p._j2) {
-        j2.ganados++;
-        j1.perdidos++;
-      }
-
-      j1.historial.push(textoHistorial(p._j1, p));
-      j2.historial.push(textoHistorial(p._j2, p));
+  function obtenerJugador(mapa, nombre) {
+    const key = normalizar(nombre);
+    if (!mapa.has(key)) {
+      mapa.set(key, crearStatsBase(nombre, mapa.size));
     }
-
-    const jugadores = Array.from(mapa.values()).map(j => {
-      const difSets = j.setsGanados - j.setsPerdidos;
-      const difGames = j.gamesGanados - j.gamesPerdidos;
-      const maxPuntos = j.jugados * 3;
-      return {
-        ...j,
-        difSets,
-        difGames,
-        sets: `${j.setsGanados}-${j.setsPerdidos}`,
-        games: `${j.gamesGanados}-${j.gamesPerdidos}`,
-        rendimiento: maxPuntos > 0 ? `${Math.round((j.puntos / maxPuntos) * 100)}%` : "0%"
-      };
-    }).sort((a, b) =>
-      b.puntos - a.puntos ||
-      a.jugados - b.jugados ||
-      b.difSets - a.difSets ||
-      b.difGames - a.difGames ||
-      a.jugador.localeCompare(b.jugador, "es")
-    ).map((j, i) => ({ ...j, posicion: i + 1 }));
-
-    return {
-      nombre: categoria.nombre,
-      jugadores,
-      partidos
-    };
+    return mapa.get(key);
   }
 
-  function zonaHTML(zona) {
-    if (!zona) return "";
-    return `<span class="etiqueta-zona ${zona.clase}">${zona.icono ? zona.icono + " " : ""}${escaparHTML(zona.texto)}</span>`;
+  function sumarPartido(stats, partido, ladoJugador, sets, ganador) {
+    const ladoRival = ladoJugador === 0 ? 1 : 0;
+    const rival = ladoJugador === 0 ? partido.jugador2 : partido.jugador1;
+    const gano = ganador === ladoJugador;
+
+    stats.puntos += numero(partido.pts?.[ladoJugador]) ?? 0;
+    stats.jugados++;
+    stats.ganados += gano ? 1 : 0;
+    stats.perdidos += gano ? 0 : 1;
+    stats.setsGanados += sets[ladoJugador];
+    stats.setsPerdidos += sets[ladoRival];
+
+    // El super tie-break define el tercer set, pero no se suma como games.
+    [partido.s1, partido.s2].forEach(set => {
+      if (!setValido(set)) return;
+      stats.gamesGanados += numero(set[ladoJugador]) ?? 0;
+      stats.gamesPerdidos += numero(set[ladoRival]) ?? 0;
+    });
+
+    const estado = gano ? "Ganó" : "Perdió";
+    const marcador = marcadorDesdeJugador(partido, ladoJugador);
+    stats.resultadosRacha.push(gano ? "G" : "P");
+    stats.historial.push(`${estado} vs ${nombreCorto(rival)} ${marcador}`);
+  }
+
+  function puntosEnfrentamientoDirecto(partidos, jugadoresEmpatados) {
+    const claves = new Set(jugadoresEmpatados.map(jugador => jugador._key));
+    const puntos = new Map(jugadoresEmpatados.map(jugador => [jugador._key, 0]));
+
+    partidos.forEach(partido => {
+      const keyJ1 = normalizar(partido?.jugador1);
+      const keyJ2 = normalizar(partido?.jugador2);
+
+      if (!claves.has(keyJ1) || !claves.has(keyJ2)) return;
+
+      puntos.set(keyJ1, (puntos.get(keyJ1) || 0) + (numero(partido.pts?.[0]) ?? 0));
+      puntos.set(keyJ2, (puntos.get(keyJ2) || 0) + (numero(partido.pts?.[1]) ?? 0));
+    });
+
+    return puntos;
+  }
+
+  function ordenarTabla2025(jugadores, partidos) {
+    const gruposPorPuntaje = new Map();
+
+    jugadores.forEach(jugador => {
+      if (!gruposPorPuntaje.has(jugador.puntos)) {
+        gruposPorPuntaje.set(jugador.puntos, []);
+      }
+      gruposPorPuntaje.get(jugador.puntos).push(jugador);
+    });
+
+    return Array.from(gruposPorPuntaje.entries())
+      .sort((a, b) => b[0] - a[0])
+      .flatMap(([, grupo]) => {
+        if (grupo.length === 1) return grupo;
+
+        const puntosDirectos = puntosEnfrentamientoDirecto(partidos, grupo);
+
+        return grupo.slice().sort((a, b) =>
+          ((puntosDirectos.get(b._key) || 0) - (puntosDirectos.get(a._key) || 0)) ||
+          (a._orden - b._orden)
+        );
+      });
+  }
+
+  function calcularCategoria(partidos) {
+    const jugadores = new Map();
+
+    partidos.forEach(partido => {
+      if (!partido?.jugador1 || !partido?.jugador2) return;
+
+      const sets = setsDelPartido(partido);
+      const ganador = ganadorDelPartido(partido, sets);
+      const jugador1 = obtenerJugador(jugadores, partido.jugador1);
+      const jugador2 = obtenerJugador(jugadores, partido.jugador2);
+
+      sumarPartido(jugador1, partido, 0, sets, ganador);
+      sumarPartido(jugador2, partido, 1, sets, ganador);
+    });
+
+    const estadisticas = Array.from(jugadores.values()).map(stats => {
+      const maximo = stats.jugados * 3;
+      const rendimiento = maximo > 0 ? Math.round((stats.puntos / maximo) * 100) : 0;
+
+      return {
+        ...stats,
+        difSets: stats.setsGanados - stats.setsPerdidos,
+        difGames: stats.gamesGanados - stats.gamesPerdidos,
+        rendimiento: `${rendimiento}%`,
+        racha: stats.resultadosRacha.length
+          ? stats.resultadosRacha.slice(-3).join("-")
+          : "Sin partidos jugados"
+      };
+    });
+
+    return ordenarTabla2025(estadisticas, partidos)
+      .map((stats, index) => ({
+        ...stats,
+        posicion: index + 1,
+        zona: zonaFinal(index + 1),
+        medalla: medalla(index + 1)
+      }));
   }
 
   function historialHTML(historial) {
@@ -1132,20 +879,53 @@
     `;
   }
 
-  function detalleHTML(jugador, stats) {
+  function diferenciaHTML(valor) {
+    const prefijo = valor >= 0 ? "+" : "";
+    return `${prefijo}${escaparHTML(valor)}`;
+  }
+
+  function detalleHTML(stats) {
     return `
       <div class="detalle-box">
         <div class="detalle-grid">
-          <div class="detalle-item"><div class="detalle-label">Partidos jugados</div><div class="detalle-valor">${escaparHTML(stats.jugados)}</div></div>
-          <div class="detalle-item"><div class="detalle-label">Ganados / perdidos</div><div class="detalle-valor">${escaparHTML(stats.ganados)}-${escaparHTML(stats.perdidos)}</div></div>
-          <div class="detalle-item"><div class="detalle-label">Rendimiento</div><div class="detalle-valor">${escaparHTML(stats.rendimiento)}</div></div>
-          <div class="detalle-item"><div class="detalle-label">Puntos</div><div class="detalle-valor">${escaparHTML(stats.puntos)}</div></div>
-          <div class="detalle-item"><div class="detalle-label">Sets</div><div class="detalle-valor">${escaparHTML(stats.sets)} (${stats.difSets >= 0 ? "+" : ""}${escaparHTML(stats.difSets)})</div></div>
-          <div class="detalle-item"><div class="detalle-label">Games</div><div class="detalle-valor">${escaparHTML(stats.games)} (${stats.difGames >= 0 ? "+" : ""}${escaparHTML(stats.difGames)})</div></div>
+          <div class="detalle-item">
+            <div class="detalle-label">Partidos jugados</div>
+            <div class="detalle-valor">${escaparHTML(stats.jugados)}</div>
+          </div>
+
+          <div class="detalle-item">
+            <div class="detalle-label">Victorias</div>
+            <div class="detalle-valor">${escaparHTML(stats.ganados)}</div>
+          </div>
+
+          <div class="detalle-item">
+            <div class="detalle-label">Derrotas</div>
+            <div class="detalle-valor">${escaparHTML(stats.perdidos)}</div>
+          </div>
+
+          <div class="detalle-item">
+            <div class="detalle-label">Rendimiento</div>
+            <div class="detalle-valor">${escaparHTML(stats.rendimiento)}</div>
+          </div>
+
+          <div class="detalle-item">
+            <div class="detalle-label">Sets</div>
+            <div class="detalle-valor">${escaparHTML(`${stats.setsGanados}-${stats.setsPerdidos}`)} (${diferenciaHTML(stats.difSets)})</div>
+          </div>
+
+          <div class="detalle-item">
+            <div class="detalle-label">Games</div>
+            <div class="detalle-valor">${escaparHTML(`${stats.gamesGanados}-${stats.gamesPerdidos}`)} (${diferenciaHTML(stats.difGames)})</div>
+          </div>
+
+          <div class="detalle-item">
+            <div class="detalle-label">Racha final</div>
+            <div class="detalle-valor">${escaparHTML(stats.racha)}</div>
+          </div>
         </div>
 
         <div class="detalle-extra">
-          <strong>📋 Historial completo 2025:</strong>
+          <strong>📋 Historial de partidos:</strong>
           ${historialHTML(stats.historial)}
         </div>
       </div>
@@ -1155,91 +935,121 @@
   function detalleMobileHTML(stats) {
     return `
       <div class="mobile-detalle-grid">
-        <div class="mobile-detalle-item"><div class="mobile-detalle-label">Partidos jugados</div><div class="mobile-detalle-valor">${escaparHTML(stats.jugados)}</div></div>
-        <div class="mobile-detalle-item"><div class="mobile-detalle-label">Ganados / perdidos</div><div class="mobile-detalle-valor">${escaparHTML(stats.ganados)}-${escaparHTML(stats.perdidos)}</div></div>
-        <div class="mobile-detalle-item"><div class="mobile-detalle-label">Rendimiento</div><div class="mobile-detalle-valor">${escaparHTML(stats.rendimiento)}</div></div>
-        <div class="mobile-detalle-item"><div class="mobile-detalle-label">Puntos</div><div class="mobile-detalle-valor">${escaparHTML(stats.puntos)}</div></div>
-        <div class="mobile-detalle-item"><div class="mobile-detalle-label">Sets</div><div class="mobile-detalle-valor">${escaparHTML(stats.sets)} (${stats.difSets >= 0 ? "+" : ""}${escaparHTML(stats.difSets)})</div></div>
-        <div class="mobile-detalle-item"><div class="mobile-detalle-label">Games</div><div class="mobile-detalle-valor">${escaparHTML(stats.games)} (${stats.difGames >= 0 ? "+" : ""}${escaparHTML(stats.difGames)})</div></div>
+        <div class="mobile-detalle-item">
+          <div class="mobile-detalle-label">Partidos jugados</div>
+          <div class="mobile-detalle-valor">${escaparHTML(stats.jugados)}</div>
+        </div>
+
+        <div class="mobile-detalle-item">
+          <div class="mobile-detalle-label">Victorias</div>
+          <div class="mobile-detalle-valor">${escaparHTML(stats.ganados)}</div>
+        </div>
+
+        <div class="mobile-detalle-item">
+          <div class="mobile-detalle-label">Derrotas</div>
+          <div class="mobile-detalle-valor">${escaparHTML(stats.perdidos)}</div>
+        </div>
+
+        <div class="mobile-detalle-item">
+          <div class="mobile-detalle-label">Rendimiento</div>
+          <div class="mobile-detalle-valor">${escaparHTML(stats.rendimiento)}</div>
+        </div>
+
+        <div class="mobile-detalle-item">
+          <div class="mobile-detalle-label">Sets</div>
+          <div class="mobile-detalle-valor">${escaparHTML(`${stats.setsGanados}-${stats.setsPerdidos}`)} (${diferenciaHTML(stats.difSets)})</div>
+        </div>
+
+        <div class="mobile-detalle-item">
+          <div class="mobile-detalle-label">Games</div>
+          <div class="mobile-detalle-valor">${escaparHTML(`${stats.gamesGanados}-${stats.gamesPerdidos}`)} (${diferenciaHTML(stats.difGames)})</div>
+        </div>
+
+        <div class="mobile-detalle-item">
+          <div class="mobile-detalle-label">Racha final</div>
+          <div class="mobile-detalle-valor">${escaparHTML(stats.racha)}</div>
+        </div>
       </div>
 
       <div class="mobile-detalle-extra">
         <div class="detalle-icono">📋</div>
         <div>
-          <strong>Historial completo 2025:</strong>
+          <strong>Historial de partidos:</strong>
           ${historialHTML(stats.historial)}
         </div>
       </div>
     `;
   }
 
-  function crearTablaCategoria(categoria) {
-    const total = categoria.jugadores.length;
-    const claseCat = claseCategoria(categoria.nombre);
-    const categoriaSlug = slug(categoria.nombre);
+  function crearCategoriaVacia(letra) {
+    return `
+      <section class="categoria-ranking ${claseCategoria(letra)}">
+        <div class="categoria-titulo">
+          <div>Categoría ${escaparHTML(letra)}</div>
+          <span>+</span>
+        </div>
 
-    if (!total) {
-      return `
-        <section class="categoria-ranking ${claseCat}">
-          <div class="categoria-titulo">
-            <div>${escaparHTML(categoria.nombre)}</div>
-            <span>+</span>
-          </div>
-          <div class="categoria-contenido">
-            <div class="categoria-pendiente">
-              <strong>Sin datos cargados todavía.</strong><br>
-              Cuando se agregue la base de resultados 2025 de esta categoría, se calculará su tabla final automáticamente.
-            </div>
-          </div>
-        </section>
-      `;
-    }
+        <div class="categoria-contenido">
+          <div class="ranking-vacio">Todavía no se han cargado los resultados 2025 de esta categoría.</div>
+        </div>
+      </section>
+    `;
+  }
 
-    const filasDesktop = categoria.jugadores.map((j, index) => {
-      const zona = zonaJugador(categoria.nombre, j.posicion, total);
-      const medallaJugador = medalla(j.posicion);
-      const detalleId = `detalle-2025-${categoriaSlug}-${index}`;
+  function crearTablaCategoria(letra, partidos) {
+    const jugadores = calcularCategoria(partidos);
+    if (jugadores.length === 0) return crearCategoriaVacia(letra);
+
+    const categoriaSlug = slug(`categoria-${letra}`);
+
+    const filasDesktop = jugadores.map((j, index) => {
+      const detalleId = `detalle-${categoriaSlug}-${index}`;
+
       return `
         <tr class="fila-jugador" data-detalle="${escaparHTML(detalleId)}">
           <td class="posicion">${escaparHTML(j.posicion)}</td>
           <td>${escaparHTML(j.jugador)}</td>
           <td class="puntos">${escaparHTML(j.puntos)}</td>
           <td class="jugados">${escaparHTML(j.jugados)}</td>
-          <td>${zonaHTML(zona)}</td>
-          <td class="medalla">${escaparHTML(medallaJugador)}</td>
+          <td>${zonaHTML(j.zona)}</td>
+          <td class="medalla">${escaparHTML(j.medalla)}</td>
         </tr>
         <tr class="detalle-row" id="${escaparHTML(detalleId)}" hidden>
-          <td colspan="6">${detalleHTML(j.jugador, j)}</td>
+          <td colspan="6">${detalleHTML(j)}</td>
         </tr>
       `;
     }).join("");
 
-    const cardsMobile = categoria.jugadores.map(j => {
-      const zona = zonaJugador(categoria.nombre, j.posicion, total);
-      const medallaJugador = medalla(j.posicion);
-      return `
-        <div class="card-jugador">
-          <div class="card-jugador-main">
-            <div class="card-posicion">${escaparHTML(j.posicion)}</div>
-            <div class="card-info">
-              <div class="card-nombre">${escaparHTML(j.jugador)}</div>
-              ${zona ? `<div class="card-zona">${zonaHTML(zona)}</div>` : ""}
-            </div>
-            <div class="card-num">${escaparHTML(j.puntos)}${medallaJugador ? `<span class="medalla-mobile">${escaparHTML(medallaJugador)}</span>` : ""}</div>
-            <div class="card-num">${escaparHTML(j.jugados)}</div>
-            <div class="card-accion">Detalle</div>
+    const cardsMobile = jugadores.map(j => `
+      <div class="card-jugador">
+        <div class="card-jugador-main">
+          <div class="card-posicion">${escaparHTML(j.posicion)}</div>
+
+          <div class="card-info">
+            <div class="card-nombre">${escaparHTML(j.jugador)}</div>
+            ${j.zona ? `<div class="card-zona">${zonaHTML(j.zona)}</div>` : ""}
           </div>
-          <div class="card-desplegable">${detalleMobileHTML(j)}</div>
+
+          <div class="card-num">
+            ${escaparHTML(j.puntos)}
+            ${j.medalla ? `<span class="medalla-mobile">${escaparHTML(j.medalla)}</span>` : ""}
+          </div>
+
+          <div class="card-num">${escaparHTML(j.jugados)}</div>
+          <div class="card-accion">Detalle</div>
         </div>
-      `;
-    }).join("");
+
+        <div class="card-desplegable">${detalleMobileHTML(j)}</div>
+      </div>
+    `).join("");
 
     return `
-      <section class="categoria-ranking ${claseCat}">
+      <section class="categoria-ranking ${claseCategoria(letra)}">
         <div class="categoria-titulo">
-          <div>${escaparHTML(categoria.nombre)}</div>
+          <div>Categoría ${escaparHTML(letra)}</div>
           <span>+</span>
         </div>
+
         <div class="categoria-contenido">
           <div class="desktop-ranking">
             <table class="tabla-ranking">
@@ -1249,13 +1059,14 @@
                   <th>Jugador</th>
                   <th>PTS</th>
                   <th>PJ</th>
-                  <th>Zona</th>
+                  <th>Resultado</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>${filasDesktop}</tbody>
             </table>
           </div>
+
           <div class="cards-ranking">
             <div class="mobile-ranking-header">
               <div>#</div>
@@ -1264,17 +1075,12 @@
               <div>PJ</div>
               <div></div>
             </div>
+
             ${cardsMobile}
           </div>
         </div>
       </section>
     `;
-  }
-
-  async function fetchTexto(url) {
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
-    return response.text();
   }
 
   function instalarEventos() {
@@ -1294,9 +1100,20 @@
           if (span) span.textContent = "+";
         });
 
+        contenedor.querySelectorAll(".detalle-row").forEach(detalle => {
+          detalle.hidden = true;
+        });
+
+        contenedor.querySelectorAll(".card-jugador").forEach(card => {
+          card.classList.remove("abierto");
+          const accion = card.querySelector(".card-accion");
+          if (accion) accion.textContent = "Detalle";
+        });
+
         if (!estabaAbierta) {
           categoriaBox.classList.add("abierta");
           if (icono) icono.textContent = "–";
+
           requestAnimationFrame(() => {
             const margenSuperior = 8;
             const posicionCategoria = titulo.getBoundingClientRect().top + window.pageYOffset - margenSuperior;
@@ -1311,8 +1128,11 @@
         const id = fila.getAttribute("data-detalle");
         const detalle = id ? document.getElementById(id) : null;
         if (!detalle) return;
+
         const visible = !detalle.hidden;
-        contenedor.querySelectorAll(".detalle-row").forEach(d => { d.hidden = true; });
+        contenedor.querySelectorAll(".detalle-row").forEach(item => {
+          item.hidden = true;
+        });
         detalle.hidden = visible;
         return;
       }
@@ -1321,11 +1141,13 @@
       if (card && contenedor.contains(card)) {
         const contenedorCard = card.closest(".card-jugador");
         const estabaAbierto = contenedorCard.classList.contains("abierto");
-        contenedor.querySelectorAll(".card-jugador").forEach(c => {
-          c.classList.remove("abierto");
-          const accion = c.querySelector(".card-accion");
+
+        contenedor.querySelectorAll(".card-jugador").forEach(item => {
+          item.classList.remove("abierto");
+          const accion = item.querySelector(".card-accion");
           if (accion) accion.textContent = "Detalle";
         });
+
         if (!estabaAbierto) {
           contenedorCard.classList.add("abierto");
           const accion = contenedorCard.querySelector(".card-accion");
@@ -1335,49 +1157,39 @@
     });
   }
 
-  async function cargarResultados2025() {
+  async function cargarResultados() {
     contenedor.innerHTML = `<div class="ranking-vacio">Cargando resultados 2025...</div>`;
     instalarEventos();
 
-    const categorias = [];
+    try {
+      const response = await fetch(DATOS_URL);
+      if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
 
-    for (const fuente of FUENTES_2025) {
-      if (!fuente.url) {
-        categorias.push({ nombre: fuente.nombre, jugadores: [], partidos: [] });
-        continue;
-      }
+      const datos = await response.json();
+      const categorias = datos?.categorias || {};
 
-      try {
-        const csv = await fetchTexto(fuente.url);
-        const partidos = leerPartidos(csv, fuente.nombre);
-        categorias.push(construirRanking(fuente, partidos));
-      } catch (error) {
-        categorias.push({ nombre: fuente.nombre, jugadores: [], partidos: [], error: true });
-      }
-    }
-
-    contenedor.innerHTML = categorias.map(crearTablaCategoria).join("");
-
-    const primeraConDatos = contenedor.querySelector(".categoria-ranking .categoria-contenido .tabla-ranking")?.closest(".categoria-ranking");
-    if (primeraConDatos) {
-      primeraConDatos.classList.add("abierta");
-      const icono = primeraConDatos.querySelector(".categoria-titulo span");
-      if (icono) icono.textContent = "–";
+      contenedor.innerHTML = ORDEN_CATEGORIAS
+        .map(letra => crearTablaCategoria(letra, Array.isArray(categorias[letra]) ? categorias[letra] : []))
+        .join("");
+    } catch (error) {
+      console.error("No se pudieron cargar los resultados 2025:", error);
+      contenedor.innerHTML = `
+        <div class="ranking-vacio">
+          No se pudieron cargar los resultados 2025.
+        </div>`;
     }
   }
 
-  cargarResultados2025();
+  cargarResultados();
 })();
 </script>
-
     </main>
-  </div>
+</div>
   <nav id="appBottomNav" class="app-bottom-nav" aria-label="Navegación principal">
     <a href="index.html" data-page="index.html"><span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-label">Inicio</span></a>
     <a href="partidos.html" data-page="partidos.html"><span class="nav-icon" aria-hidden="true">🎾</span><span class="nav-label">Partidos</span></a>
     <a href="tablas.html" data-page="tablas.html"><span class="nav-icon" aria-hidden="true">📊</span><span class="nav-label">Tablas</span></a>
     <a href="reglas.html" data-page="reglas.html"><span class="nav-icon" aria-hidden="true">📘</span><span class="nav-label">Reglas</span></a>
-    <a href="resultados-2025.html" data-page="resultados-2025.html"><span class="nav-icon" aria-hidden="true">🏅</span><span class="nav-label">2025</span></a>
     <a href="marcador.html" data-page="marcador.html"><span class="nav-icon" aria-hidden="true">🔢</span><span class="nav-label">Marcador</span></a>
   </nav>
 </body>

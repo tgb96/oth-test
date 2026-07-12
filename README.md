@@ -34,3 +34,11 @@ https://tgb96.github.io/oth4/?v=5
 ```
 
 Si el celular todavía muestra una versión anterior, borra los datos del sitio o abre en incógnito para limpiar el service worker antiguo.
+
+
+## Resultados históricos 2025
+
+- Página: `resultados-2025.html`
+- Datos locales: `data/resultados-2025.json`
+- Actualmente contiene la Categoría A. Las categorías B, C y D ya aparecen en la interfaz y quedan preparadas para incorporar sus partidos en el mismo archivo.
+- El orden 2025 utiliza puntaje y luego enfrentamiento directo. Sets y games quedan solo como estadísticas.

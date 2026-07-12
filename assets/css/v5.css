@@ -343,6 +343,11 @@ body.index-page {
   background: linear-gradient(180deg, var(--ot-green-700), var(--ot-green-950)) !important;
 }
 
+.v5-btn-history {
+  grid-column: 1 / -1 !important;
+  background: linear-gradient(180deg, #526f68, #173d33) !important;
+}
+
 .v5-install-card {
   width: 100% !important;
   min-height: clamp(74px, 12vh, 112px) !important;
@@ -514,60 +519,5 @@ body:not(.index-page) .app {
   .rules-section,
   .criterios-box {
     box-shadow: 0 16px 42px rgba(52,28,12,.10) !important;
-  }
-}
-
-/* =========================================================
-   V19 · Menú inferior con scroll horizontal para 6 accesos
-   ========================================================= */
-#appBottomNav.app-bottom-nav {
-  display: flex !important;
-  grid-template-columns: none !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
-  overscroll-behavior-x: contain !important;
-  -webkit-overflow-scrolling: touch !important;
-  scrollbar-width: none !important;
-  scroll-snap-type: x proximity !important;
-  gap: 7px !important;
-}
-
-#appBottomNav.app-bottom-nav::-webkit-scrollbar {
-  display: none !important;
-}
-
-#appBottomNav.app-bottom-nav a {
-  flex: 0 0 104px !important;
-  width: 104px !important;
-  min-width: 104px !important;
-  scroll-snap-align: center !important;
-}
-
-@media (max-width: 560px) {
-  #appBottomNav.app-bottom-nav {
-    padding-inline: 7px !important;
-    gap: 5px !important;
-  }
-
-  #appBottomNav.app-bottom-nav a {
-    flex-basis: 82px !important;
-    width: 82px !important;
-    min-width: 82px !important;
-  }
-}
-
-@media (max-width: 380px), (max-height: 720px) {
-  #appBottomNav.app-bottom-nav {
-    height: 64px !important;
-  }
-
-  #appBottomNav.app-bottom-nav a {
-    height: 48px !important;
-    flex-basis: 78px !important;
-    width: 78px !important;
-    min-width: 78px !important;
-    font-size: 8.8px !important;
   }
 }
