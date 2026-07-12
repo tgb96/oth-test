@@ -19,8 +19,8 @@
   <meta name="apple-mobile-web-app-title" content="Open Tennis">
   <link rel="stylesheet" href="assets/css/v3.css" />
   <link rel="stylesheet" href="assets/css/v4.css?v=4.1" />
-  <link rel="stylesheet" href="assets/css/v5.css?v=5" />
-  <script defer src="assets/js/app.js?v=5"></script>
+  <link rel="stylesheet" href="assets/css/v5.css?v=5.2" />
+  <script defer src="assets/js/app.js?v=12"></script>
 </head>
 <body class="tablas-page v5-page">
   <div class="layout app-shell">
@@ -41,9 +41,9 @@
     <h3>Criterios de clasificación</h3>
     <ul>
       <li><strong>Mayor puntaje</strong></li>
-      <li><strong>Resultado del enfrentamiento directo</strong> entre los jugadores empatados</li>
+      <li><strong>Enfrentamiento directo</strong> entre los jugadores empatados en puntos.</li>
+      <li>Las posiciones mostradas corresponden al cierre oficial de la temporada 2025.</li>
     </ul>
-    <p class="criterios-nota">Los sets y games se muestran como estadísticas, pero no se utilizan para ordenar la tabla 2025.</p>
 
     <h3>Sistema de puntuación 2025</h3>
     <ul>
@@ -228,6 +228,12 @@
   border: 1px solid #ea9999;
 }
 
+.zona-retiro {
+  background: #e7eaed;
+  color: #4b535b;
+  border: 1px solid #b9c0c7;
+}
+
 .detalle-row td {
   background: #fafafa;
   padding: 0;
@@ -280,6 +286,30 @@
 
 .detalle-extra strong {
   color: #333;
+}
+
+.detalle-desempate {
+  background: #fff8e6;
+  border-color: #e8c66a;
+}
+
+.detalle-nota > span {
+  display: block;
+  margin-top: 5px;
+  line-height: 1.35;
+}
+
+.detalle-desempate > span {
+  color: #5f4a12;
+}
+
+.detalle-observacion {
+  background: #edf6f4;
+  border-color: #91b8b1;
+}
+
+.detalle-observacion > span {
+  color: #28534d;
 }
 
 .cards-ranking {
@@ -370,7 +400,6 @@
 .card-zona {
   margin-top: 3px;
   max-width: 100%;
-  overflow: hidden;
 }
 
 .card-zona .etiqueta-zona {
@@ -378,8 +407,8 @@
   font-size: 10.8px;
   padding: 2px 6px;
   gap: 3px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  line-height: 1.15;
 }
 
 .card-num {
@@ -538,14 +567,6 @@
   padding-left: 20px;
 }
 
-
-.criterios-nota {
-  margin: 8px 0 18px;
-  color: var(--muted, #5f6f68);
-  font-size: 0.92rem;
-  line-height: 1.45;
-}
-
 @media (max-width: 700px) {
   .rankings-header h2 {
     font-size: 21px;
@@ -669,25 +690,45 @@
     return "";
   }
 
-  function zonaFinal(posicion) {
-    if (posicion === 1) {
-      return { texto: "Campeón 2025", clase: "zona-campeon", icono: "👑" };
-    }
+  function zonaHTML(zona) {
+    if (!zona) return "";
+    return `<span class="etiqueta-zona ${zona.clase}">${zona.icono ? zona.icono + " " : ""}${escaparHTML(zona.texto)}</span>`;
+  }
 
-    if (posicion === 2) {
-      return { texto: "Subcampeón", clase: "zona-repechaje", icono: "🥈" };
-    }
+  function valorPorNombre(mapa, nombre) {
+    if (!mapa || typeof mapa !== "object") return null;
+    const objetivo = normalizar(nombre);
 
-    if (posicion === 3) {
-      return { texto: "Tercer lugar", clase: "zona-ascenso", icono: "🥉" };
+    for (const [clave, valor] of Object.entries(mapa)) {
+      if (normalizar(clave) === objetivo) return valor;
     }
 
     return null;
   }
 
-  function zonaHTML(zona) {
-    if (!zona) return "";
-    return `<span class="etiqueta-zona ${zona.clase}">${zona.icono ? zona.icono + " " : ""}${escaparHTML(zona.texto)}</span>`;
+  function normalizarNota(nota) {
+    if (!nota) return null;
+
+    if (typeof nota === "string") {
+      return {
+        titulo: "Criterio de desempate",
+        icono: "⚖️",
+        clase: "detalle-desempate",
+        texto: nota
+      };
+    }
+
+    if (typeof nota !== "object") return null;
+
+    const texto = String(nota.texto || "").trim();
+    if (!texto) return null;
+
+    return {
+      titulo: String(nota.titulo || "Observación"),
+      icono: String(nota.icono || "ℹ️"),
+      clase: String(nota.clase || "detalle-observacion"),
+      texto
+    };
   }
 
   function setValido(set) {
@@ -781,55 +822,20 @@
       stats.gamesPerdidos += numero(set[ladoRival]) ?? 0;
     });
 
-    const estado = gano ? "Ganó" : "Perdió";
-    const marcador = marcadorDesdeJugador(partido, ladoJugador);
+    const esWO = partido.wo === true;
+    const estado = gano
+      ? (esWO ? "Ganó por W/O" : "Ganó")
+      : (esWO ? "Perdió por W/O" : "Perdió");
+    const marcador = esWO ? "" : marcadorDesdeJugador(partido, ladoJugador);
     stats.resultadosRacha.push(gano ? "G" : "P");
-    stats.historial.push(`${estado} vs ${nombreCorto(rival)} ${marcador}`);
+    stats.historial.push(`${estado} vs ${nombreCorto(rival)}${marcador ? ` ${marcador}` : ""}`);
   }
 
-  function puntosEnfrentamientoDirecto(partidos, jugadoresEmpatados) {
-    const claves = new Set(jugadoresEmpatados.map(jugador => jugador._key));
-    const puntos = new Map(jugadoresEmpatados.map(jugador => [jugador._key, 0]));
-
-    partidos.forEach(partido => {
-      const keyJ1 = normalizar(partido?.jugador1);
-      const keyJ2 = normalizar(partido?.jugador2);
-
-      if (!claves.has(keyJ1) || !claves.has(keyJ2)) return;
-
-      puntos.set(keyJ1, (puntos.get(keyJ1) || 0) + (numero(partido.pts?.[0]) ?? 0));
-      puntos.set(keyJ2, (puntos.get(keyJ2) || 0) + (numero(partido.pts?.[1]) ?? 0));
-    });
-
-    return puntos;
-  }
-
-  function ordenarTabla2025(jugadores, partidos) {
-    const gruposPorPuntaje = new Map();
-
-    jugadores.forEach(jugador => {
-      if (!gruposPorPuntaje.has(jugador.puntos)) {
-        gruposPorPuntaje.set(jugador.puntos, []);
-      }
-      gruposPorPuntaje.get(jugador.puntos).push(jugador);
-    });
-
-    return Array.from(gruposPorPuntaje.entries())
-      .sort((a, b) => b[0] - a[0])
-      .flatMap(([, grupo]) => {
-        if (grupo.length === 1) return grupo;
-
-        const puntosDirectos = puntosEnfrentamientoDirecto(partidos, grupo);
-
-        return grupo.slice().sort((a, b) =>
-          ((puntosDirectos.get(b._key) || 0) - (puntosDirectos.get(a._key) || 0)) ||
-          (a._orden - b._orden)
-        );
-      });
-  }
-
-  function calcularCategoria(partidos) {
+  function calcularCategoria(partidos, configuracion = {}) {
     const jugadores = new Map();
+    const ordenOficial = Array.isArray(configuracion.ordenFinal)
+      ? new Map(configuracion.ordenFinal.map((nombre, index) => [normalizar(nombre), index]))
+      : new Map();
 
     partidos.forEach(partido => {
       if (!partido?.jugador1 || !partido?.jugador2) return;
@@ -843,26 +849,38 @@
       sumarPartido(jugador2, partido, 1, sets, ganador);
     });
 
-    const estadisticas = Array.from(jugadores.values()).map(stats => {
-      const maximo = stats.jugados * 3;
-      const rendimiento = maximo > 0 ? Math.round((stats.puntos / maximo) * 100) : 0;
+    return Array.from(jugadores.values())
+      .map(stats => {
+        const maximo = stats.jugados * 3;
+        const rendimiento = maximo > 0 ? Math.round((stats.puntos / maximo) * 100) : 0;
 
-      return {
-        ...stats,
-        difSets: stats.setsGanados - stats.setsPerdidos,
-        difGames: stats.gamesGanados - stats.gamesPerdidos,
-        rendimiento: `${rendimiento}%`,
-        racha: stats.resultadosRacha.length
-          ? stats.resultadosRacha.slice(-3).join("-")
-          : "Sin partidos jugados"
-      };
-    });
+        return {
+          ...stats,
+          difSets: stats.setsGanados - stats.setsPerdidos,
+          difGames: stats.gamesGanados - stats.gamesPerdidos,
+          rendimiento: `${rendimiento}%`,
+          racha: stats.resultadosRacha.length
+            ? stats.resultadosRacha.slice(-3).join("-")
+            : "Sin partidos jugados",
+          zona: valorPorNombre(configuracion.zonas, stats.jugador),
+          nota: normalizarNota(valorPorNombre(configuracion.notas, stats.jugador))
+        };
+      })
+      .sort((a, b) => {
+        const posicionA = ordenOficial.get(a._key);
+        const posicionB = ordenOficial.get(b._key);
+        const tieneA = Number.isInteger(posicionA);
+        const tieneB = Number.isInteger(posicionB);
 
-    return ordenarTabla2025(estadisticas, partidos)
+        if (tieneA && tieneB) return posicionA - posicionB;
+        if (tieneA) return -1;
+        if (tieneB) return 1;
+
+        return (b.puntos - a.puntos) || (a._orden - b._orden);
+      })
       .map((stats, index) => ({
         ...stats,
         posicion: index + 1,
-        zona: zonaFinal(index + 1),
         medalla: medalla(index + 1)
       }));
   }
@@ -924,6 +942,13 @@
           </div>
         </div>
 
+        ${stats.nota ? `
+          <div class="detalle-extra detalle-nota ${escaparHTML(stats.nota.clase)}">
+            <strong>${escaparHTML(stats.nota.icono)} ${escaparHTML(stats.nota.titulo)}:</strong>
+            <span>${escaparHTML(stats.nota.texto)}</span>
+          </div>
+        ` : ""}
+
         <div class="detalle-extra">
           <strong>📋 Historial de partidos:</strong>
           ${historialHTML(stats.historial)}
@@ -971,6 +996,16 @@
         </div>
       </div>
 
+      ${stats.nota ? `
+        <div class="mobile-detalle-extra detalle-nota ${escaparHTML(stats.nota.clase)}">
+          <div class="detalle-icono">${escaparHTML(stats.nota.icono)}</div>
+          <div>
+            <strong>${escaparHTML(stats.nota.titulo)}:</strong>
+            <span class="mobile-detalle-extra-linea">${escaparHTML(stats.nota.texto)}</span>
+          </div>
+        </div>
+      ` : ""}
+
       <div class="mobile-detalle-extra">
         <div class="detalle-icono">📋</div>
         <div>
@@ -996,8 +1031,8 @@
     `;
   }
 
-  function crearTablaCategoria(letra, partidos) {
-    const jugadores = calcularCategoria(partidos);
+  function crearTablaCategoria(letra, partidos, configuracion) {
+    const jugadores = calcularCategoria(partidos, configuracion);
     if (jugadores.length === 0) return crearCategoriaVacia(letra);
 
     const categoriaSlug = slug(`categoria-${letra}`);
@@ -1167,9 +1202,20 @@
 
       const datos = await response.json();
       const categorias = datos?.categorias || {};
+      const ordenFinal = datos?.ordenFinal || {};
+      const zonasFinales = datos?.zonasFinales || {};
+      const notasJugadores = datos?.notasJugadores || {};
 
       contenedor.innerHTML = ORDEN_CATEGORIAS
-        .map(letra => crearTablaCategoria(letra, Array.isArray(categorias[letra]) ? categorias[letra] : []))
+        .map(letra => crearTablaCategoria(
+          letra,
+          Array.isArray(categorias[letra]) ? categorias[letra] : [],
+          {
+            ordenFinal: Array.isArray(ordenFinal[letra]) ? ordenFinal[letra] : [],
+            zonas: zonasFinales[letra] || {},
+            notas: notasJugadores[letra] || {}
+          }
+        ))
         .join("");
     } catch (error) {
       console.error("No se pudieron cargar los resultados 2025:", error);

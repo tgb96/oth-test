@@ -11,7 +11,7 @@ Versión tipo app para GitHub Pages.
 - Tema visual elegante inspirado en tenis sobre arcilla: verde profundo, terracota y crema.
 - Reglamento en texto HTML, sin imágenes.
 - Mejor adaptación de escritorio con ancho máximo, tarjetas y espaciado consistente.
-- Cache PWA actualizado a `open-tennis-v5-shell`.
+- Cache PWA actualizado a `open-tennis-v12-shell`.
 
 ## Archivos principales
 
@@ -40,5 +40,4 @@ Si el celular todavía muestra una versión anterior, borra los datos del sitio 
 
 - Página: `resultados-2025.html`
 - Datos locales: `data/resultados-2025.json`
-- Actualmente contiene la Categoría A. Las categorías B, C y D ya aparecen en la interfaz y quedan preparadas para incorporar sus partidos en el mismo archivo.
-- El orden 2025 utiliza puntaje y luego enfrentamiento directo. Sets y games quedan solo como estadísticas.
+- Contiene las categorías A, B, C y D con sus partidos, posiciones finales, estadísticas, historiales y observaciones de cierre de temporada.

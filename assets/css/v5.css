@@ -345,7 +345,7 @@ body.index-page {
 
 .v5-btn-history {
   grid-column: 1 / -1 !important;
-  background: linear-gradient(180deg, #526f68, #173d33) !important;
+  background: linear-gradient(180deg, #35776f 0%, #174f49 100%) !important;
 }
 
 .v5-install-card {
